@@ -85,11 +85,11 @@ function MakeCronString(whichone) { //String nach Cronsyntax zusammenbauen für 
     var tempString = "";
     if (MyTimer[whichone][5] == "Zeit") { //Wenn Zeit gewählt
         tempString = SplitTime(MyTimer[whichone][2])[1] + " " + SplitTime(MyTimer[whichone][2])[0] + " * * " + DaysSubString;
-        log("CronString für Timer " + whichone + " erstellt " + tempString);
+        //log("CronString für Timer " + whichone + " erstellt " + tempString);
     }
     else if (MyTimer[whichone][5] != "Zeit") { //Wenn Astro gewählt
         tempString = SplitTime(MyTimer[whichone][3])[1] + " " + SplitTime(MyTimer[whichone][3])[0] + " * * " + DaysSubString;
-        log("Cronstring für Timer " + whichone + " Astro erstellt " + tempString);
+        //log("Cronstring für Timer " + whichone + " Astro erstellt " + tempString);
     };
     return tempString;
 };
@@ -97,7 +97,7 @@ function MakeCronString(whichone) { //String nach Cronsyntax zusammenbauen für 
 //spezifischen Timer setzen
 function SetTimer(whichone) {
     if (MyTimer[whichone][0] == true) {
-        log("Timer " + whichone + " wird gesetzt")
+        //log("Timer " + whichone + " wird gesetzt")
         TimerAction[whichone] = schedule(MakeCronString(whichone), function () {
             DoAction(whichone);
             if (MyTimer[whichone][5] != "Zeit") { //Wenn Astro gewählt
@@ -148,7 +148,7 @@ function SetChoosenAstroTime(whichone, GoToTomorrow) { //Zeit für gewählte Ast
     let tomorrow = today.setDate(today.getDate() + 1);
     let tomorrowAstroTime = getAstroDate(AstroChoice, tomorrow);
     tomorrowAstroTime.setMinutes(tomorrowAstroTime.getMinutes() + Shift);//zammrechna
-    log(AstroChoice + " beginnt heute um:" + getAstroDate(AstroChoice).toLocaleTimeString('de-DE', { hour12: false }) + " und beginnt morgen um " + tomorrowAstroTime.toLocaleTimeString('de-DE', { hour12: false }));
+    //log(AstroChoice + " beginnt heute um:" + getAstroDate(AstroChoice).toLocaleTimeString('de-DE', { hour12: false }) + " und beginnt morgen um " + tomorrowAstroTime.toLocaleTimeString('de-DE', { hour12: false }));
     //log(getAstroDate(AstroChoice).getTime() + " " + today.getTime() + " " + today.toLocaleTimeString());
     //log("Astro=" + getAstroDate(AstroChoice) + " Heute=" + jetzt + " " + "todayzeit=" + today.toLocaleTimeString());
 
@@ -159,16 +159,16 @@ function SetChoosenAstroTime(whichone, GoToTomorrow) { //Zeit für gewählte Ast
     if (AstroTime.getTime() <= jetzt.getTime() || GoToTomorrow == true) { //Wenn Astrozeit vor aktueller Zeit dann Astrozeit von morgen verwenden
         setState(id1[whichone][3], tomorrowAstroTime.toLocaleTimeString('de-DE', { hour12: false }));
         MyTimer[whichone][3] = tomorrowAstroTime.toLocaleTimeString('de-DE', { hour12: false });
-        log("Astrotime von morgen verwendet, Event is heute bereits vorüber = " + tomorrowAstroTime.toLocaleTimeString('de-DE', { hour12: false }));
+        //log("Astrotime von morgen verwendet, Event is heute bereits vorüber = " + tomorrowAstroTime.toLocaleTimeString('de-DE', { hour12: false }));
     }
     //else if (getAstroDate(AstroChoice).getTime() > jetzt.getTime()) {
     else if (AstroTime.getTime() > jetzt.getTime()) {
         setState(id1[whichone][3], AstroTime.toLocaleTimeString('de-DE', { hour12: false }));
         MyTimer[whichone][3] = AstroTime.toLocaleTimeString('de-DE', { hour12: false });
-        log("Astrotime von heute verwendet, Event kommt heute noch = " + AstroTime.toLocaleTimeString('de-DE', { hour12: false }) + " Morgen=" + tomorrowAstroTime.toLocaleTimeString('de-DE', { hour12: false }));
+        //log("Astrotime von heute verwendet, Event kommt heute noch = " + AstroTime.toLocaleTimeString('de-DE', { hour12: false }) + " Morgen=" + tomorrowAstroTime.toLocaleTimeString('de-DE', { hour12: false }));
     }
     else {
-        log("Derf ned sei");
+        //log("Derf ned sei");
     };
 };
 
@@ -314,12 +314,6 @@ for (let x = 1; x < AnzahlTimer + 1; x++) { //Alle Timer durchlaufen und Trigger
     });
 
 };
-
-
-
-// Ab hier Tests, einfach ignorieren
-
-//***************
 
 
 
