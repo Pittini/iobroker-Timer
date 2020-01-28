@@ -1,9 +1,9 @@
-Legt eine beliebige Anzahl von Timern an mit Folgenden Eigenschaften:
-1. Alle benötigten Datenpunkte werden automatisch erstellt
-2. Jeder Timer steuert genau einen Schaltvorgang mit true/false. Für einen kompletten ein/aus Zyklus müssen also 2 Timer angelegt werden
-3.  Timer bietet die Option "Nur bei Anwesenheit" bzw. "Nur bei Abwesenheit" und greift hierfür auf einen schon vorhandenen Anwesenheitsdatenpunkt zu
-4. Timer ist ein Wochentimer, jeder Tag kann separat an/ab -gewählt werden
-5. Timer hat Astrofunktion, bei Auswahl kann hier zusätzlich ein +- Offset angegeben werden
+# Legt eine beliebige Anzahl von Timern an mit Folgenden Eigenschaften:
+* 1. Alle benötigten Datenpunkte werden automatisch erstellt
+* 2. Jeder Timer steuert genau einen Schaltvorgang mit true/false. Für einen kompletten ein/aus Zyklus müssen also 2 Timer angelegt werden
+* 3.  Timer bietet die Option "Nur bei Anwesenheit" bzw. "Nur bei Abwesenheit" und greift hierfür auf einen schon vorhandenen Anwesenheitsdatenpunkt zu
+* 4. Timer ist ein Wochentimer, jeder Tag kann separat an/ab -gewählt werden
+* 5. Timer hat Astrofunktion, bei Auswahl kann hier zusätzlich ein +- Offset angegeben werden
 
 Das vis verwendet das Material Design Script+CSS von Uhula. Wer das nicht hat, wird das vis anpassen müssen damits wieder nach was aussieht, Funktion ist auf jeden Fall gegeben.
 
