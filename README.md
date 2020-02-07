@@ -23,6 +23,9 @@ Das wars, viel Spaß.
 - ...
 
 ## Changelog
+### 1.1.2 (2020-02-07)
+* (pittini) Bugfix: Presence Trigger hinzugefügt
+
 ### 1.1.1 (2020-01-26)
 * (pittini) Readme erstellt
 

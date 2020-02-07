@@ -2,7 +2,8 @@
 //Legt Timer an
 //Wichtige Einstellungen
 const AnzahlTimer = 10; //Wieviele Timer anlegen? Der erste ist 1, nicht 0!
-let Presence = getState("radar2.0._nHere").val; //Pfad zum Anwesenheitsdatenpunkt. Erwartet wird eine Zahl >=0
+let PresenceDp = "radar2.0._nHere";
+let Presence = getState(PresenceDp).val; //Pfad zum Anwesenheitsdatenpunkt. Erwartet wird eine Zahl >=0
 
 //let setTimeout;
 const logging = true; //Logmeldungen an/aus
@@ -85,11 +86,11 @@ function MakeCronString(whichone) { //String nach Cronsyntax zusammenbauen für 
     var tempString = "";
     if (MyTimer[whichone][5] == "Zeit") { //Wenn Zeit gewählt
         tempString = SplitTime(MyTimer[whichone][2])[1] + " " + SplitTime(MyTimer[whichone][2])[0] + " * * " + DaysSubString;
-        //log("CronString für Timer " + whichone + " erstellt " + tempString);
+        log("CronString für Timer " + whichone + " erstellt " + tempString);
     }
     else if (MyTimer[whichone][5] != "Zeit") { //Wenn Astro gewählt
         tempString = SplitTime(MyTimer[whichone][3])[1] + " " + SplitTime(MyTimer[whichone][3])[0] + " * * " + DaysSubString;
-        //log("Cronstring für Timer " + whichone + " Astro erstellt " + tempString);
+        log("Cronstring für Timer " + whichone + " Astro erstellt " + tempString);
     };
     return tempString;
 };
@@ -97,7 +98,7 @@ function MakeCronString(whichone) { //String nach Cronsyntax zusammenbauen für 
 //spezifischen Timer setzen
 function SetTimer(whichone) {
     if (MyTimer[whichone][0] == true) {
-        //log("Timer " + whichone + " wird gesetzt")
+        log("Timer " + whichone + " wird gesetzt")
         TimerAction[whichone] = schedule(MakeCronString(whichone), function () {
             DoAction(whichone);
             if (MyTimer[whichone][5] != "Zeit") { //Wenn Astro gewählt
@@ -148,7 +149,7 @@ function SetChoosenAstroTime(whichone, GoToTomorrow) { //Zeit für gewählte Ast
     let tomorrow = today.setDate(today.getDate() + 1);
     let tomorrowAstroTime = getAstroDate(AstroChoice, tomorrow);
     tomorrowAstroTime.setMinutes(tomorrowAstroTime.getMinutes() + Shift);//zammrechna
-    //log(AstroChoice + " beginnt heute um:" + getAstroDate(AstroChoice).toLocaleTimeString('de-DE', { hour12: false }) + " und beginnt morgen um " + tomorrowAstroTime.toLocaleTimeString('de-DE', { hour12: false }));
+    log(AstroChoice + " beginnt heute um:" + getAstroDate(AstroChoice).toLocaleTimeString('de-DE', { hour12: false }) + " und beginnt morgen um " + tomorrowAstroTime.toLocaleTimeString('de-DE', { hour12: false }));
     //log(getAstroDate(AstroChoice).getTime() + " " + today.getTime() + " " + today.toLocaleTimeString());
     //log("Astro=" + getAstroDate(AstroChoice) + " Heute=" + jetzt + " " + "todayzeit=" + today.toLocaleTimeString());
 
@@ -159,22 +160,23 @@ function SetChoosenAstroTime(whichone, GoToTomorrow) { //Zeit für gewählte Ast
     if (AstroTime.getTime() <= jetzt.getTime() || GoToTomorrow == true) { //Wenn Astrozeit vor aktueller Zeit dann Astrozeit von morgen verwenden
         setState(id1[whichone][3], tomorrowAstroTime.toLocaleTimeString('de-DE', { hour12: false }));
         MyTimer[whichone][3] = tomorrowAstroTime.toLocaleTimeString('de-DE', { hour12: false });
-        //log("Astrotime von morgen verwendet, Event is heute bereits vorüber = " + tomorrowAstroTime.toLocaleTimeString('de-DE', { hour12: false }));
+        log("Astrotime von morgen verwendet, Event is heute bereits vorüber = " + tomorrowAstroTime.toLocaleTimeString('de-DE', { hour12: false }));
     }
     //else if (getAstroDate(AstroChoice).getTime() > jetzt.getTime()) {
     else if (AstroTime.getTime() > jetzt.getTime()) {
         setState(id1[whichone][3], AstroTime.toLocaleTimeString('de-DE', { hour12: false }));
         MyTimer[whichone][3] = AstroTime.toLocaleTimeString('de-DE', { hour12: false });
-        //log("Astrotime von heute verwendet, Event kommt heute noch = " + AstroTime.toLocaleTimeString('de-DE', { hour12: false }) + " Morgen=" + tomorrowAstroTime.toLocaleTimeString('de-DE', { hour12: false }));
+        log("Astrotime von heute verwendet, Event kommt heute noch = " + AstroTime.toLocaleTimeString('de-DE', { hour12: false }) + " Morgen=" + tomorrowAstroTime.toLocaleTimeString('de-DE', { hour12: false }));
     }
     else {
-        //log("Derf ned sei");
+        log("Derf ned sei");
     };
 };
 
 function DoAction(whichone) {
+    log("Whichone=" + whichone + " Presence=" + Presence + "MyTimer[whichone][13]=" + MyTimer[whichone][13] + "MyTimer[whichone][14]=" + MyTimer[whichone][14]);
     if (MyTimer[whichone][0] == true) { //Wenn Timer aktiv
-        if ((MyTimer[whichone][14] == true && Presence !=0) || (MyTimer[whichone][13] == true && Presence == 0) || (MyTimer[whichone][13] == true && MyTimer[whichone][14] == true)) { //Wenn "bei Anwesenheit" aktiv
+        if ((MyTimer[whichone][14] == true && Presence != 0) || (MyTimer[whichone][13] == true && Presence == 0) || (MyTimer[whichone][13] == true && MyTimer[whichone][14] == true)) { //Wenn "bei Anwesenheit" aktiv
 
             if (MyTimer[whichone][1] == 1) { // Wenn die Rolle Anschalter ist
                 setState(MyTimer[whichone][13], true); //Switchtarget aktivieren
@@ -314,6 +316,15 @@ for (let x = 1; x < AnzahlTimer + 1; x++) { //Alle Timer durchlaufen und Trigger
     });
 
 };
+
+on(PresenceDp, function (dp) { //Bei Änderung Anwesenheitsdatenpunkt
+    Presence = dp.state.val;
+});
+
+
+// Ab hier Tests, einfach ignorieren
+
+//***************
 
 
 
