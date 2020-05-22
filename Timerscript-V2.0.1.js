@@ -1,9 +1,9 @@
-//V 2.0.0 Stand 21.5.2020 - In Progress - Github: https://github.com/Pittini/iobroker-Timer Forum: https://forum.iobroker.net/topic/33228/vorlage-flexibles-timerskript-vis
+//V 2.0.1 Stand 22.5.2020 - In Progress - Github: https://github.com/Pittini/iobroker-Timer Forum: https://forum.iobroker.net/topic/33228/vorlage-flexibles-timerskript-vis
 
 //Legt Timer an
 
 //Wichtige Einstellungen
-const logging = false; //Logmeldungen an/aus
+const logging = true; //Logmeldungen an/aus
 const praefix = "javascript.0.Timer."; //Grundpfad
 const PresenceDp = "radar2.0._nHere"; //Pfad zum Anwesenheitsdatenpunkt - Leer lassen wenn nicht vorhanden
 
@@ -126,43 +126,14 @@ function PrepareDps() {
     DpCount++;
     States[DpCount] = { id: praefix + "Template" + ".OnlyIfNoPresence", initial: true, forceCreation: false, common: { read: true, write: true, name: "Nur ausführen falls niemand anwesend", type: "boolean", role: "switch", def: false } }; //Legt fest ob der Timer aktiv ist
     DpCount++;
-    /*
-        //Timer DPs
-        for (let x = 0; x < TimerCount; x++) {
-            //Datenpunkte anlegen 
-            States[DpCount] = { id: praefix + x, initial: "", forceCreation: false, common: { read: true, write: true, name: "Timer" + x, type: "channel", def: "" } }; //Channel anlegen
-            DpCount++;
-            States[DpCount] = { id: praefix + x + ".Aktiv", initial: false, forceCreation: false, common: { read: true, write: true, name: "Timer aktiv", type: "boolean", role: "switch", def: false } }; //Legt fest ob der Timer aktiv ist
-            DpCount++;
-            States[DpCount] = { id: praefix + x + ".Rolle", initial: 2, forceCreation: false, common: { read: true, write: true, name: "Rolle", type: "number", role: "value", def: 2 } }; //Legt fest ob der Timer für An oder Aus zuständig ist
-            DpCount++;
-            States[DpCount] = { id: praefix + x + ".TimerTimestamp", initial: "00:00:00", forceCreation: false, common: { read: true, write: true, name: "Zeitstempel für schaltzeit", type: "string", def: "00:00:00" } };
-            DpCount++;
-            States[DpCount] = { id: praefix + x + ".TimerAstroTimestamp", initial: "00:00:00", forceCreation: false, common: { read: true, write: true, name: "Zeitstempel für Astroschaltzeit", type: "string", def: "00:00:00" } };
-            DpCount++;
-            States[DpCount] = { id: praefix + x + ".TimerAstroShift", initial: 0, forceCreation: false, common: { read: true, write: true, name: "Zeitverschiebung für Astroschaltzeit", type: "number", def: 0 } };
-            DpCount++;
-            for (let y = 0; y < 7; y++) { //Einträge für jeden Wochentag anlegen
-                States[DpCount] = { id: praefix + x + ".Timer" + Wochentage[y], initial: true, forceCreation: false, common: { read: true, write: true, name: Wochentage[y], type: "boolean", role: "switch", def: true } };
-                DpCount++;
-            };
-            States[DpCount] = { id: praefix + x + ".TimerChoice", initial: ModeValues[0], forceCreation: false, common: { read: true, write: true, name: "Funktionswahl für Timer/Astro", type: "string", def: "Zeit" } }; //Gewählte Funktion, Timer oder Astro
-            DpCount++;
-            States[DpCount] = { id: praefix + x + ".SwitchTarget", initial: "", forceCreation: false, common: { read: true, write: true, name: "Ziel für Schaltvorgang", type: "string", def: "" } };
-            DpCount++;
-            States[DpCount] = { id: praefix + x + ".OnlyIfPresence", initial: true, forceCreation: false, common: { read: true, write: true, name: "Nur ausführen falls jemand anwesend", type: "boolean", role: "switch", def: false } }; //Legt fest ob der Timer aktiv ist
-            DpCount++;
-            States[DpCount] = { id: praefix + x + ".OnlyIfNoPresence", initial: true, forceCreation: false, common: { read: true, write: true, name: "Nur ausführen falls niemand anwesend", type: "boolean", role: "switch", def: false } }; //Legt fest ob der Timer aktiv ist
-            DpCount++;
-        };
-    */
+
     //Alle States anlegen, Main aufrufen wenn fertig
     let numStates = States.length;
     States.forEach(function (state) {
         createState(state.id, state.initial, state.forceCreation, state.common, function () {
             numStates--;
             if (numStates === 0) {
-                if (logging) log("CreateStates fertig!");
+                if (logging) log("Initial CreateStates fertig!");
                 main();
             };
         });
@@ -206,8 +177,8 @@ function CreateTimer(x) { //Erzeugt Timerchannel und Dps. Aufruf bei Start und A
         createState(state.id, state.initial, state.forceCreation, state.common, function () {
             numStates--;
             if (numStates === 0) { //Sicherstellen das alle Dps erzeugt wurden bevor eingelesen wird
-                if (logging) log("CreateStates fertig!");
-                FillTimerArray(x)
+                if (logging) log("Timer CreateState(s) fertig!");
+                FillTimerArray(x);
             };
         });
     });
@@ -231,7 +202,7 @@ function FillTimerArray(x) { //Erzeugt TimerArray. Aufruf bei Start und AddTimer
 
     MyTimer[x].push(false); //Weiteren Status [17] für IsEdit anhängen
 
-    if (MyTimer[x][13] == "") { //Wenn Target nicht leer
+    if (MyTimer[x][13] == "") { //Wenn Target leer
         MyTimer[x].push(""); //Zusätzlichen internen Eintrag [18] für Aktuellen Device Status anhängen
     } else {
         MyTimer[x].push(getState(MyTimer[x][13]).val);//Zusätzlichen internen Eintrag [18] für Aktuellen Device Status anhängen
@@ -321,6 +292,7 @@ function init() {
                     TempTimerTargets += Targets[y] + ";";
                     TempTimerTargetNames += getObject(GetParentId(Targets[y]), "common").common.name + ";";
                 };
+                log(Targets.length + " Targets found - Targets are: " + Targets);
                 TempTimerTargets = TempTimerTargets.substr(0, TempTimerTargets.length - 1); //Letzten Strichpunkt wieder entfernen
                 TempTimerTargetNames = TempTimerTargetNames.substr(0, TempTimerTargetNames.length - 1);//Letzten Strichpunkt wieder entfernen
                 setState(praefix + "TimerTargetValues", TempTimerTargets); //Datenpunkt für Vis Listenfeld füllen
@@ -341,9 +313,8 @@ function main() {
     init();
     CreateTimerCountList()
     SetValueListPairs();
-    ConvertPresence()
+    ConvertPresence();
     CreateTrigger();
-
 }
 
 function GetParentId(DpId) { //Liest Id des dem DP übergeordnetem Channel

@@ -68,7 +68,9 @@ Das wars, viel Spaß.
 
 
 ## Changelog
-### V2.0.0 Beta (17.5.2020)
+### V2.0.1 Beta (22.5.2020)
+* Add: einige Logpunkte hinzugefügt
+### V2.0.0 Beta (22.5.2020)
 * Release V2 Beta
 ### V1.1.2 (7.2.2020)
 * Bugfix: Presence Trigger hinzugefügt
