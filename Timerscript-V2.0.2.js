@@ -1,4 +1,4 @@
-//V 2.0.1 Stand 22.5.2020 - In Progress - Github: https://github.com/Pittini/iobroker-Timer Forum: https://forum.iobroker.net/topic/33228/vorlage-flexibles-timerskript-vis
+//V 2.0.2 Stand 22.5.2020 - In Progress - Github: https://github.com/Pittini/iobroker-Timer Forum: https://forum.iobroker.net/topic/33228/vorlage-flexibles-timerskript-vis
 
 //Legt Timer an
 
