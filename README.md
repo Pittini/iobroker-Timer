@@ -22,7 +22,7 @@
 Dieser darf numerische oder boolsche Werte beinhalten. Habt Ihr keinen entsprechenden Datenpunkt tragt "" ein.
 4. Das Script starten.  
 Im Hintergrund werden nun alle benötigten Channels und Datenpunkte unter dem Channel der in Zeile 7 angegeben wurde, angelegt. Als default ist das: "javascript.0.Timer".
-5. Ab hier habt Ihr mit dem Skript und der Objektliste nichts mehr zu tun, alles weitere wird via Vis erledigt, ihr solltet nun die beigefügte Vorlage (TimerView.txt) via "Widgets importieren" in Euer Vis Projekt integrieren und aufrufen.
+5. Ab hier habt Ihr mit dem Skript und der Objektliste nichts mehr zu tun, alles weitere wird via Vis erledigt, ihr solltet nun die beigefügte Vorlage (TimerView.txt) via "Widgets importieren" in Euer Vis Projekt integrieren und die Vis RUNTIME aufrufen. Im Vis Editor habt Ihr nach dem Import nichts mehr zu tun.
 
 ## Bedienung und Anzeigen des Vis Views
 Vorab der Hinweis, dass alle in der Tabelle verwendeten Icons und Farben in den Skript/Tabelleneinstellungen verändert werden können. Wie in all meinen Skripten wird für die Icons der Iconsatz "icons-mfd-svg" verwendet. Ist dieser Satz installiert, so seht Ihr dies in der Liste der installierten Instanzen. Ist er dort nicht aufzufinden solltet Ihr ihn installieren (als Adapter).  
@@ -48,16 +48,16 @@ Aus Sicherheits/Fehlbedienungs-gründen und um Schreibzugriffe zu minimieren wer
 
 Um einen neuen Timereintrag anzulegen verwendest Du: 
 
-12.  **Den Button "+"** - Ein klick auf diesen Button erzeugt einen neuen Eintrg und setzt den Fokus auf diesen so das Du sofort im Editbereich die gewünschten Werte eintragen kannst. Speichern nicht vergessen!
+12.  **Den Button "+"** - Ein klick auf diesen Button erzeugt einen neuen Eintrag und setzt den Fokus auf diesen so das Du sofort im Editbereich die gewünschten Werte eintragen kannst. Speichern nicht vergessen!
 
 Zuguterletzt gibt es noch die Möglichkeit den Timer mit dem aktuellen Fokus zu löschen, hierzu dient:
 
 13. **Der Button "Papierkorb"** - Um versehentliches Löschen zu erschweren hat dieser Button eine Sicherheitsabfrage. Der erste Klick auf den Button "Papierkorb" läßt dessen Farbe zu rot wechseln, das Symbol wandelt sich zu einem Fragezeichen. Erst ein weiterer Klick, nunmehr auf das Fragezeichen, innerhalb 3 Sekunden, löscht den Eintrag tatsächlich und unwiederbringlich. Läßt Du die 3 Sekunden ohne Klick verstreichen, wandelt sich der Button zurück zum Papierkorb, der Löschmodus wird abgebrochen.
 
 ### Farben der Übersichtstabelle
-**Ocker** bzw "dunkelgelb" zeigt Dir den Eintrag mit aktuellem Fokus. Änderungen im Editbereich würden sich auf genau diese Zeile auswirken. Sobald Du im Editbereich eine erste Änderung vornimmst, wandelt sich die Farbe in:
+**Weisser** Rahmen zeigt Dir den Eintrag mit aktuellem Fokus. Änderungen im Editbereich würden sich auf genau diese Zeile auswirken. Sobald Du im Editbereich eine erste Änderung vornimmst, wandelt sich der Hintergrund in:
 
-**hellgelb** und zeigt Dir damit an das Du bereits eine Änderung vorgenommen hast. Gespeichert wird diese aber, wie oben beschrieben, erst, wenn Du ds Diskettensymbol anklickst.
+**gelb** und zeigt Dir damit an das Du bereits eine Änderung vorgenommen hast. Gespeichert wird diese aber, wie oben beschrieben, erst, wenn Du das Diskettensymbol anklickst.
 
 **grün** dargestellt werden alle Einträge welche einstellungsgemäß **eingeschaltet** wurden. Wird manuell oder durch einen anderen Timer der Status verändert, wechselt die Zeile wieder zu grau.
 
@@ -68,18 +68,24 @@ Das wars, viel Spaß.
 
 
 ## Changelog
+### V2.0.2 Beta (23.5.2020)
+*Fix: Trigger für TimerTargets wird jetzt beim speichern korrekt gesetzt/aktualisiert.
+* Add: Meldungen können via Datenpunkt gemutet/deaktiviert werden. Weist Ihr diesem Datenpunkt die Funktion TimerTarget zu, kann dies auch zeitgesteuert geschehen.
+* Add: Meldungen hinzugefügt. Ausgeführte Schaltungen können jetzt via Mail/Telegram/Alexa gemeldet werden.
+* Change: Der fokusierte Timer im Vis hat nun farbigen Rahmen statt Hintergrund.
+* Fix: Presence Datenpunkt defaults geändert.
 ### V2.0.1 Beta (22.5.2020)
-* Add: einige Logpunkte hinzugefügt
+* Add: einige Logpunkte hinzugefügt.
 ### V2.0.0 Beta (22.5.2020)
 * Release V2 Beta
 ### V1.1.2 (7.2.2020)
-* Bugfix: Presence Trigger hinzugefügt
+* Bugfix: Presence Trigger hinzugefügt.
 
 ### V1.1.1 (26.1.2020)
 * Add: Readme erstellt
 
 ### V1.1.0 (18.12.2019)
-* Add: Schaltoptionen "Nur bei Anwesenheit" und "Nur bei Abwesenheit" hinzugefügt
+* Add: Schaltoptionen "Nur bei Anwesenheit" und "Nur bei Abwesenheit" hinzugefügt.
 
 ### V1.0.0 (2019-10-28)
 * Initial Release
