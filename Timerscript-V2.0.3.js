@@ -1,23 +1,22 @@
-//V 2.0.2 Stand 22.5.2020 - In Progress - Github: https://github.com/Pittini/iobroker-Timer Forum: https://forum.iobroker.net/topic/33228/vorlage-flexibles-timerskript-vis
+const SkriptVersion = "2.0.3"; //Stand 24.5.2020 - Github: https://github.com/Pittini/iobroker-Timer Forum: https://forum.iobroker.net/topic/33228/vorlage-flexibles-timerskript-vis
 
-//Legt Timer an
+//Timerskript
 
 //Wichtige Einstellungen
 const logging = true; //Logmeldungen an/aus
 const praefix = "javascript.0.Timer."; //Grundpfad
-const PresenceDp = "radar2.0._nHere"; //Pfad zum Anwesenheitsdatenpunkt - Leer lassen wenn nicht vorhanden
-
+const PresenceDp = "radar2.0._nHere"; //Pfad zum Anwesenheitsdatenpunkt - Leer lassen wenn nicht vorhanden!
 const WelcheFunktionVerwenden = "TimerTarget";
 
+//Benachrichtigungseinstellungen
 const UseTelegram = false; // Sollen Nachrichten via Telegram gesendet werden?
 const UseAlexa = false; // Sollen Nachrichten via Alexa ausgegeben werden?
 const AlexaId = ""; // Die Alexa Seriennummer.
 const UseMail = false; //Nachricht via Mail versenden?
 const UseSay = true; // Sollen Nachrichten via Say ausgegeben werden? Autorenfunktion, muß deaktiviert werden.
 const UseEventLog = false; // Sollen Nachrichten ins Eventlog geschreiben werden? Autorenfunktion, muß deaktiviert werden.
-//Tabellen Einstellungen
-//Bearbeite - Aktiv - Aktion - Mode - Zeit - Offset - Ziel - Tage - wenn anwesend - wenn abwesend
 
+//Tabellen Einstellungen
 const TblOnBgColor = "#4caf50"; //Hintergrundfarbe für Timer hat angeschaltet
 const TblOffBgColor = "#f44336"; //Hintergrundfarbe für Timer hat ausgeschaltet
 const TblIdleBgColor = "black"; //Hintergrundfarbe für Timer ist inaktiv
@@ -55,7 +54,7 @@ const ModeText = ["Zeit", "Morgendämmerung", "Sonnenaufgang", "Goldene Stunde",
 const AktionValues = [0, 1, 2];
 const AktionText = ["Ausschalten", "Einschalten", "Umschalten"];
 const Dps = ["Aktiv", "Rolle", "TimerTimestamp", "TimerAstroTimestamp", "TimerAstroShift", "TimerChoice", "TimerSonntag", "TimerMontag", "TimerDienstag", "TimerMittwoch", "TimerDonnerstag", "TimerFreitag", "TimerSamstag", "SwitchTarget", "OnlyIfPresence", "OnlyIfNoPresence"];
-
+const DpDefaults = [false, 1, "00:00:00", "00:00:00", 0, "time", true, true, true, true, true, true, true, "", true, true];
 //const TimerAction = []; //Objektarray für Schedules
 let MyTimer = []; //Datenarray aller Timer
 
@@ -66,7 +65,7 @@ let SwitchingInProgress = false; //Steuervariable um ungewolltes Triggern (und a
 let DeletionInProgress = false;
 let ChoosenTimer = 0; //Aktuell (in Vis) gewählter Timer
 
-
+log("Starting TimerSkript V" + SkriptVersion);
 PrepareDps(); //Datenpunkte Initial erstellen
 
 function Meldung(msg) {
@@ -139,29 +138,30 @@ function PrepareDps() {
     DpCount++;
 
     //Template Dps
-    States[DpCount] = { id: praefix + "Template", initial: "", forceCreation: false, common: { read: true, write: true, name: "Template für Vis", type: "channel", def: "" } };
+    //States[DpCount] = { id: praefix + "Template", initial: "", forceCreation: false, common: { read: true, write: true, name: "Template für Vis", type: "channel", def: "" } };
+    //DpCount++;
+    States[DpCount] = { id: praefix + "Template" + ".Aktiv", initial: DpDefaults[0], forceCreation: false, common: { read: true, write: true, name: "Timer aktiv", type: "boolean", role: "switch", def: DpDefaults[0] } }; //Legt fest ob der Timer aktiv ist
     DpCount++;
-    States[DpCount] = { id: praefix + "Template" + ".Aktiv", initial: false, forceCreation: false, common: { read: true, write: true, name: "Timer aktiv", type: "boolean", role: "switch", def: false } }; //Legt fest ob der Timer aktiv ist
+    States[DpCount] = { id: praefix + "Template" + ".Rolle", initial: DpDefaults[1], forceCreation: false, common: { read: true, write: true, name: "Rolle", type: "number", role: "value", def: DpDefaults[1] } }; //Legt fest ob der Timer für An oder Aus zuständig ist
     DpCount++;
-    States[DpCount] = { id: praefix + "Template" + ".Rolle", initial: 1, forceCreation: false, common: { read: true, write: true, name: "Rolle", type: "number", role: "value", def: 1 } }; //Legt fest ob der Timer für An oder Aus zuständig ist
+    States[DpCount] = { id: praefix + "Template" + ".TimerTimestamp", initial: DpDefaults[2], forceCreation: false, common: { read: true, write: true, name: "Zeitstempel für schaltzeit", type: "string", def: DpDefaults[2] } };
     DpCount++;
-    States[DpCount] = { id: praefix + "Template" + ".TimerTimestamp", initial: "00:00:00", forceCreation: false, common: { read: true, write: true, name: "Zeitstempel für schaltzeit", type: "string", def: "00:00:00" } };
+    States[DpCount] = { id: praefix + "Template" + ".TimerAstroTimestamp", initial: DpDefaults[3], forceCreation: false, common: { read: true, write: true, name: "Zeitstempel für Astroschaltzeit", type: "string", def: DpDefaults[3] } };
     DpCount++;
-    States[DpCount] = { id: praefix + "Template" + ".TimerAstroTimestamp", initial: "00:00:00", forceCreation: false, common: { read: true, write: true, name: "Zeitstempel für Astroschaltzeit", type: "string", def: "00:00:00" } };
+    States[DpCount] = { id: praefix + "Template" + ".TimerAstroShift", initial: DpDefaults[4], forceCreation: false, common: { read: true, write: true, name: "Zeitverschiebung für Astroschaltzeit", type: "number", def: DpDefaults[4] } };
     DpCount++;
-    States[DpCount] = { id: praefix + "Template" + ".TimerAstroShift", initial: 0, forceCreation: false, common: { read: true, write: true, name: "Zeitverschiebung für Astroschaltzeit", type: "number", def: 0 } };
+    States[DpCount] = { id: praefix + "Template" + ".TimerChoice", initial: DpDefaults[5], forceCreation: false, common: { read: true, write: true, name: "Funktionswahl für Timer/Astro", type: "string", def: DpDefaults[5] } }; //Gewählte Funktion, Timer oder Astro
     DpCount++;
+
     for (let y = 0; y < 7; y++) { //Einträge für jeden Wochentag anlegen
-        States[DpCount] = { id: praefix + "Template" + ".Timer" + Wochentage[y], initial: true, forceCreation: false, common: { read: true, write: true, name: Wochentage[y], type: "boolean", role: "switch", def: true } };
+        States[DpCount] = { id: praefix + "Template" + ".Timer" + Wochentage[y], initial: DpDefaults[(y + 6)], forceCreation: false, common: { read: true, write: true, name: Wochentage[y], type: "boolean", role: "switch", def: DpDefaults[(y + 6)] } };
         DpCount++;
     };
-    States[DpCount] = { id: praefix + "Template" + ".TimerChoice", initial: ModeValues[0], forceCreation: false, common: { read: true, write: true, name: "Funktionswahl für Timer/Astro", type: "string", def: ModeValues[0] } }; //Gewählte Funktion, Timer oder Astro
+    States[DpCount] = { id: praefix + "Template" + ".SwitchTarget", initial: DpDefaults[13], forceCreation: false, common: { read: true, write: true, name: "Ziel für Schaltvorgang", type: "string", def: DpDefaults[13] } };
     DpCount++;
-    States[DpCount] = { id: praefix + "Template" + ".SwitchTarget", initial: "", forceCreation: false, common: { read: true, write: true, name: "Ziel für Schaltvorgang", type: "string", def: "" } };
+    States[DpCount] = { id: praefix + "Template" + ".OnlyIfPresence", initial: DpDefaults[14], forceCreation: false, common: { read: true, write: true, name: "Nur ausführen falls jemand anwesend", type: "boolean", role: "switch", def: DpDefaults[14] } }; //Legt fest ob der Timer aktiv ist
     DpCount++;
-    States[DpCount] = { id: praefix + "Template" + ".OnlyIfPresence", initial: true, forceCreation: false, common: { read: true, write: true, name: "Nur ausführen falls jemand anwesend", type: "boolean", role: "switch", def: true } }; //Legt fest ob der Timer aktiv ist
-    DpCount++;
-    States[DpCount] = { id: praefix + "Template" + ".OnlyIfNoPresence", initial: true, forceCreation: false, common: { read: true, write: true, name: "Nur ausführen falls niemand anwesend", type: "boolean", role: "switch", def: true } }; //Legt fest ob der Timer aktiv ist
+    States[DpCount] = { id: praefix + "Template" + ".OnlyIfNoPresence", initial: DpDefaults[15], forceCreation: false, common: { read: true, write: true, name: "Nur ausführen falls niemand anwesend", type: "boolean", role: "switch", def: DpDefaults[15] } }; //Legt fest ob der Timer aktiv ist
     DpCount++;
 
     //Alle States anlegen, Main aufrufen wenn fertig
@@ -180,32 +180,33 @@ function PrepareDps() {
 function CreateTimer(x) { //Erzeugt Timerchannel und Dps. Aufruf bei Start und AddTimer
     //if (logging) log("Reaching CreateTimer, x=" + x)
 
-    let States = [];
+    const States = [];
     DpCount = 0;
     //Datenpunkte anlegen 
-    States[DpCount] = { id: praefix + x, initial: "", forceCreation: false, common: { read: true, write: true, name: "Timer" + x, type: "channel", def: "" } }; //Channel anlegen
+    //States[DpCount] = { id: praefix + x, initial: "", forceCreation: false, common: { read: true, write: true, name: "Timer" + x, type: "channel", def: "" } }; //Channel anlegen
+    //DpCount++;
+    States[DpCount] = { id: praefix + x + ".Aktiv", initial: DpDefaults[0], forceCreation: false, common: { read: true, write: true, name: "Timer aktiv", type: "boolean", role: "switch", def: DpDefaults[0] } }; //Legt fest ob der Timer aktiv ist
     DpCount++;
-    States[DpCount] = { id: praefix + x + ".Aktiv", initial: false, forceCreation: false, common: { read: true, write: true, name: "Timer aktiv", type: "boolean", role: "switch", def: false } }; //Legt fest ob der Timer aktiv ist
+    States[DpCount] = { id: praefix + x + ".Rolle", initial: DpDefaults[1], forceCreation: false, common: { read: true, write: false, name: "Rolle", type: "number", role: "value", def: DpDefaults[1] } }; //Legt fest ob der Timer für An oder Aus zuständig ist
     DpCount++;
-    States[DpCount] = { id: praefix + x + ".Rolle", initial: 1, forceCreation: false, common: { read: true, write: false, name: "Rolle", type: "number", role: "value", def: 1 } }; //Legt fest ob der Timer für An oder Aus zuständig ist
+    States[DpCount] = { id: praefix + x + ".TimerTimestamp", initial: DpDefaults[2], forceCreation: false, common: { read: true, write: false, name: "Zeitstempel für schaltzeit", type: "string", def: DpDefaults[2] } };
     DpCount++;
-    States[DpCount] = { id: praefix + x + ".TimerTimestamp", initial: "00:00:00", forceCreation: false, common: { read: true, write: false, name: "Zeitstempel für schaltzeit", type: "string", def: "00:00:00" } };
+    States[DpCount] = { id: praefix + x + ".TimerAstroTimestamp", initial: DpDefaults[3], forceCreation: false, common: { read: true, write: false, name: "Zeitstempel für Astroschaltzeit", type: "string", def: DpDefaults[3] } };
     DpCount++;
-    States[DpCount] = { id: praefix + x + ".TimerAstroTimestamp", initial: "00:00:00", forceCreation: false, common: { read: true, write: false, name: "Zeitstempel für Astroschaltzeit", type: "string", def: "00:00:00" } };
+    States[DpCount] = { id: praefix + x + ".TimerAstroShift", initial: DpDefaults[4], forceCreation: false, common: { read: true, write: false, name: "Zeitverschiebung für Astroschaltzeit", type: "number", def: DpDefaults[4] } };
     DpCount++;
-    States[DpCount] = { id: praefix + x + ".TimerAstroShift", initial: 0, forceCreation: false, common: { read: true, write: false, name: "Zeitverschiebung für Astroschaltzeit", type: "number", def: 0 } };
+    States[DpCount] = { id: praefix + x + ".TimerChoice", initial: DpDefaults[5], forceCreation: false, common: { read: true, write: false, name: "Funktionswahl für Timer/Astro", type: "string", def: DpDefaults[5] } }; //Gewählte Funktion, Timer oder Astro
     DpCount++;
+
     for (let y = 0; y < 7; y++) { //Einträge für jeden Wochentag anlegen
-        States[DpCount] = { id: praefix + x + ".Timer" + Wochentage[y], initial: true, forceCreation: false, common: { read: true, write: false, name: Wochentage[y], type: "boolean", role: "switch", def: true } };
+        States[DpCount] = { id: praefix + x + ".Timer" + Wochentage[y], initial: DpDefaults[(y + 6)], forceCreation: false, common: { read: true, write: false, name: Wochentage[y], type: "boolean", role: "switch", def: DpDefaults[(y + 6)] } };
         DpCount++;
     };
-    States[DpCount] = { id: praefix + x + ".TimerChoice", initial: ModeValues[0], forceCreation: false, common: { read: true, write: false, name: "Funktionswahl für Timer/Astro", type: "string", def: ModeValues[0] } }; //Gewählte Funktion, Timer oder Astro
+    States[DpCount] = { id: praefix + x + ".SwitchTarget", initial: DpDefaults[13], forceCreation: false, common: { read: true, write: false, name: "Ziel für Schaltvorgang", type: "string", def: DpDefaults[13] } };
     DpCount++;
-    States[DpCount] = { id: praefix + x + ".SwitchTarget", initial: "", forceCreation: false, common: { read: true, write: false, name: "Ziel für Schaltvorgang", type: "string", def: "" } };
+    States[DpCount] = { id: praefix + x + ".OnlyIfPresence", initial: DpDefaults[14], forceCreation: false, common: { read: true, write: false, name: "Nur ausführen falls jemand anwesend", type: "boolean", role: "switch", def: DpDefaults[14] } }; //Legt fest ob der Timer aktiv ist
     DpCount++;
-    States[DpCount] = { id: praefix + x + ".OnlyIfPresence", initial: true, forceCreation: false, common: { read: true, write: false, name: "Nur ausführen falls jemand anwesend", type: "boolean", role: "switch", def: true } }; //Legt fest ob der Timer aktiv ist
-    DpCount++;
-    States[DpCount] = { id: praefix + x + ".OnlyIfNoPresence", initial: true, forceCreation: false, common: { read: true, write: false, name: "Nur ausführen falls niemand anwesend", type: "boolean", role: "switch", def: true } }; //Legt fest ob der Timer aktiv ist
+    States[DpCount] = { id: praefix + x + ".OnlyIfNoPresence", initial: DpDefaults[15], forceCreation: false, common: { read: true, write: false, name: "Nur ausführen falls niemand anwesend", type: "boolean", role: "switch", def: DpDefaults[15] } }; //Legt fest ob der Timer aktiv ist
     DpCount++;
 
     //Alle States anlegen,  aufrufen wenn fertig
@@ -294,7 +295,7 @@ function CreateTimerCountList() {
 }
 
 function SetValueListPairs() { //Erzeugt Werte und Texte für Timer Value Listenfeld
-    if (logging) log("Reaching SetValueListPairs()")
+    if (logging) log("Reaching SetValueListPairs()");
 
     //Mode ValueList
     setState(praefix + "ModeValues", ModeValues.join(";"));
@@ -306,7 +307,7 @@ function SetValueListPairs() { //Erzeugt Werte und Texte für Timer Value Listen
 }
 
 function init() {
-    if (logging) log("Reaching Init()")
+    if (logging) log("Reaching Init()");
     //    0         1           2                   3                   4                   5               6               7               8               8               10              11                  12              13              14              15                  16              17          18              19
     // "Aktiv", "Rolle", "TimerTimestamp", "TimerAstroTimestamp", "TimerAstroShift", "TimerChoice", "TimerSonntag", "TimerMontag", "TimerDienstag", "TimerMittwoch", "TimerDonnerstag", "TimerFreitag", "TimerSamstag", "SwitchTarget", "OnlyIfPresence", "OnlyIfNoPresence", "TabellenStatus", "IsEdit","DeviceStatus","TimerAktion"
 
@@ -497,7 +498,6 @@ function DoAction(whichone) {
     };
 }
 
-
 //Zeit in Stunden und Minuten teilen für Cronstring
 function SplitTime(Time) {
     let timesplit = Time.split(":", 2);
@@ -669,11 +669,14 @@ function MakeTable() {
 }
 
 function WriteToTimer(whichone) { //Schreibt Daten vom Template in bestimmten Timer
-    if (logging) log("Reaching WriteToTimer, whichone=" + whichone)
+    if (logging) log("Reaching WriteToTimer, whichone=" + whichone);
     let TempVal;
     for (let y = 0; y < Dps.length; y++) {
         TempVal = getState(praefix + "Template" + "." + Dps[y]).val
         if (y == 4) TempVal = parseInt(TempVal); //Workaround für jqui Input welches immer Strings liefert
+        if (y == 13 ) { //Alte subscription löschen
+            unsubscribe(MyTimer[whichone][13]);
+        };
         setState(praefix + whichone + "." + Dps[y], TempVal);
         MyTimer[whichone][y] = TempVal;
     };
@@ -681,7 +684,7 @@ function WriteToTimer(whichone) { //Schreibt Daten vom Template in bestimmten Ti
     AstroOrTime(whichone); //Modus bestimmen
     SetTimer(whichone); // Timer/Schedule aktualisieren
     SwitchEditMode(whichone, false); //Editmode deaktivieren
-    CreateDeviceTrigger(whichone)
+    CreateDeviceTrigger(whichone) //Neuen Trigger erzeugen
     MakeTable(); //Tabelle refreshen
 }
 
@@ -696,7 +699,7 @@ function AddNewTimer() {
 
     setTimeout(function () { //Warten bis neuer Timer angelegt
         setState(praefix + "SwitchToTimer", TimerCount - 1); //Dann zu neuem Timer wechseln
-    }, 250);
+    }, 50);
 }
 
 
@@ -708,6 +711,9 @@ function DeleteTimer(whichone = ChoosenTimer) {
 
     KillTimer(whichone); //Vorhandenen Timer/Schedule löschen
 
+    if (MyTimer[whichone][13] != "") {//Subscription löschen wenn ein Ziel vorhanden
+        unsubscribe(MyTimer[whichone][13]);
+    };
     if (whichone == 0) { //Erster Eintrag des Arrays soll gelöscht werden
         NewArray = MyTimer.slice(whichone + 1, TimerCount);
     }
@@ -733,17 +739,24 @@ function DeleteTimer(whichone = ChoosenTimer) {
         };
     };
     setState(praefix + "SwitchToTimer", TimerCount - 1); //Dann zu vorherigem Timer wechseln
-    log("Now Delete last channel=" + praefix + (TimerCount));
+    if (logging) log("Now Delete last channel=" + praefix + (TimerCount));
     deleteObject(praefix + (TimerCount), true); //Löscht gesamten Channel
 
     MakeTable();
 }
 
-function WriteToTemplate(whichone) { //Schreibt Werte von bestimmten Timer ins Template
+function WriteToTemplate(whichone, ) { //Schreibt Werte von bestimmten Timer ins Template
     if (logging) log("Reaching WriteToTemplate(whichone), whichone=" + whichone);
-    for (let y = 0; y < Dps.length; y++) {
-        //log(MyTimer[whichone][y])
-        if (typeof MyTimer[whichone][y] !== "undefined") setState(praefix + "Template" + "." + Dps[y], MyTimer[whichone][y]);
+    if (logging) log("Typeof MyTimer[" + whichone + "]=" + typeof MyTimer[whichone])
+    if (typeof MyTimer[whichone] == "undefined") { //Wenn bei neuem Timer Eintrag noch nicht gesetzt (async Problem)
+        for (let y = 0; y < Dps.length; y++) {
+            setState(praefix + "Template" + "." + Dps[y], DpDefaults[y]); //Defaults setzen
+        };
+    }
+    else {
+        for (let y = 0; y < Dps.length; y++) {
+            setState(praefix + "Template" + "." + Dps[y], MyTimer[whichone][y]); //Normale Werte aus Array setzen
+        };
     };
 }
 
@@ -758,12 +771,12 @@ function CreateDeviceTrigger(x) {    //TargetDeviceTrigger
     if (MyTimer[x][0] && MyTimer[x][13] != "") { //Wenn Timer ist aktiv und Ziel nicht leer
         if (logging) log("Subscription added for " + MyTimer[x][13] + " at Timer " + x);
         on(MyTimer[x][13], function (dp) { //Timer Zieldatenpunkt
-            if (logging) log("TargetDevice " + x + " state changed, refreshing table");
+            if (logging) log("TargetDevice " + x + " state changed to " + dp.state.val + ", refreshing table");
             MyTimer[x][18] = dp.state.val; //Aktuellen Status MyTimer Array [18] zuweisen
             MakeTable();
         });
     }
-    else if (!MyTimer[x][0] && MyTimer[x][13] != "") {
+    else if (!MyTimer[x][0] && MyTimer[x][13] != "") { //Wenn Timer ist inaktiv und Ziel nicht leer
         if (logging) log("Subscription unsubscribed for " + MyTimer[x][13] + " at Timer " + x);
         unsubscribe(MyTimer[x][13]);
     };
@@ -779,6 +792,17 @@ function CreateTrigger() {
             //log("SwitchingInProgress =" + SwitchingInProgress)
             if (!SwitchingInProgress) {
                 SwitchEditMode(ChoosenTimer, true);
+            };
+
+            if (x == 14) {
+                if (!dp.state.val && !getState(praefix + "Template." + Dps[15]).val) {
+                    setState(praefix + "Template." + Dps[15], true);
+                };
+            }
+            else if (x == 15) {
+                if (!dp.state.val && !getState(praefix + "Template." + Dps[14]).val) {
+                    setState(praefix + "Template." + Dps[14], true);
+                };
             };
         });
     };

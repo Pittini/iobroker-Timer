@@ -68,8 +68,17 @@ Das wars, viel Spaß.
 
 
 ## Changelog
+### V2.0.3 Beta (24.5.2020)
+* Fix: Problem welches zur Warnmeldung:  
+"Object javascript.0.Timer.x is invalid: obj.common.type has an invalid value (channel) but has to be one of number, string, boolean, array, object, mixed, file, json" behoben
+* Fix: Async Problem beim hinzufügen neuer Timer behoben welche zur Fehlermeldung:  
+ "Error in callback: TypeError: Cannot read property '0' of undefined" führten.
+* Fix: Problem mit verbleibenden subscriptions behoben welche zur Fehlermeldung:  
+ "Error in callback: TypeError: Cannot set property '18' of undefined" führten.
 ### V2.0.2 Beta (23.5.2020)
-*Fix: Trigger für TimerTargets wird jetzt beim speichern korrekt gesetzt/aktualisiert.
+* Add: Es ist nun nicht mehr möglich die Schaltung gleichzeitig bei Anwesenheit als auch bei Abwesenheit zu deaktivieren da dies zu "nie" führen würde.
+### V2.0.2 Beta (23.5.2020)
+* Fix: Trigger für TimerTargets wird jetzt beim speichern korrekt gesetzt/aktualisiert.
 * Add: Meldungen können via Datenpunkt gemutet/deaktiviert werden. Weist Ihr diesem Datenpunkt die Funktion TimerTarget zu, kann dies auch zeitgesteuert geschehen.
 * Add: Meldungen hinzugefügt. Ausgeführte Schaltungen können jetzt via Mail/Telegram/Alexa gemeldet werden.
 * Change: Der fokusierte Timer im Vis hat nun farbigen Rahmen statt Hintergrund.
