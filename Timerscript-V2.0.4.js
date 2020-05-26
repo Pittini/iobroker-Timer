@@ -315,7 +315,7 @@ function init() {
     //    0         1           2                   3                   4                   5               6               7               8               9        
     //"Aktiv", "Rolle", "TimerTimestamp", "TimerAstroTimestamp", "TimerAstroShift", "TimerChoice", "TimerSonntag", "TimerMontag", "TimerDienstag", "TimerMittwoch", 
 
-    //       10              11                  12              13              14              15                  16              17 (+1)        18 (+2)     19 (+3)        20 (+4)
+    //       10              11                  12              13              14              15                  16              17 (+0)        18 (+1)     19 (+2)        20 (+3)
     // "TimerDonnerstag", "TimerFreitag", "TimerSamstag", "SwitchTarget", "OnlyIfPresence", "OnlyIfNoPresence","ActivityMessage", "TabellenStatus", "IsEdit","DeviceStatus","TimerAktion"
 
     TimerCount = getState(praefix + "TimerCount").val; // Initialen Timercount mit im Dp gespeicherten Wert korrigieren
@@ -425,8 +425,8 @@ function SetTimer(whichone) {
 }
 
 function KillTimer(whichone) { //spezifischen Timer löschen
-    if (typeof (MyTimer[whichone][(Dps.length + 2)]) != "object") return; //Wenn kein Schedule gesetzt Abbruch
-    clearSchedule(MyTimer[whichone][(Dps.length + 2)]);
+    if (typeof (MyTimer[whichone][(Dps.length + 3)]) != "object") return; //Wenn kein Schedule gesetzt Abbruch
+    clearSchedule(MyTimer[whichone][(Dps.length + 3)]);
     if (logging) log("Timer Schedule " + whichone + " killed");
 }
 
