@@ -68,9 +68,13 @@ Das wars, viel Spaß.
 
 
 ## Changelog
+### V2.0.4 (25.5.2020)
+* Add: Schriftgrößen der Tabelle nun im Einstellungsbereich konfigurierbar.
+* Add: Benachrichtigung nun zusätzlich pro Timer aktivier/deaktivier-bar, hierzu zusätzliche Spalte + Button ins Vis eingefügt.
+* Change: Triggerhandling geändert. Farbwechsel in der Tabelle erfolgt nun bei schalten des Timers (rot/grün) und zurückschalten (grau) wodurch auch immer. Alle weiteren Schaltvorgänge von außerhalb werden ignoriert.
 ### V2.0.3 Beta (24.5.2020)
 * Fix: Problem welches zur Warnmeldung:  
-"Object javascript.0.Timer.x is invalid: obj.common.type has an invalid value (channel) but has to be one of number, string, boolean, array, object, mixed, file, json" behoben
+"Object javascript.0.Timer.x is invalid: obj.common.type has an invalid value (channel) but has to be one of number, string, boolean, array, object, mixed, file, json" führte behoben.
 * Fix: Async Problem beim hinzufügen neuer Timer behoben welche zur Fehlermeldung:  
  "Error in callback: TypeError: Cannot read property '0' of undefined" führten.
 * Fix: Problem mit verbleibenden subscriptions behoben welche zur Fehlermeldung:  

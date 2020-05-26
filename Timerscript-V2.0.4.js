@@ -1,4 +1,4 @@
-const SkriptVersion = "2.0.3"; //Stand 24.5.2020 - Github: https://github.com/Pittini/iobroker-Timer Forum: https://forum.iobroker.net/topic/33228/vorlage-flexibles-timerskript-vis
+const SkriptVersion = "2.0.4"; //Stand 26.5.2020 - Github: https://github.com/Pittini/iobroker-Timer Forum: https://forum.iobroker.net/topic/33228/vorlage-flexibles-timerskript-vis
 
 //Timerskript
 
@@ -13,8 +13,8 @@ const UseTelegram = false; // Sollen Nachrichten via Telegram gesendet werden?
 const UseAlexa = false; // Sollen Nachrichten via Alexa ausgegeben werden?
 const AlexaId = ""; // Die Alexa Seriennummer.
 const UseMail = false; //Nachricht via Mail versenden?
-const UseSay = true; // Sollen Nachrichten via Say ausgegeben werden? Autorenfunktion, muß deaktiviert werden.
-const UseEventLog = false; // Sollen Nachrichten ins Eventlog geschreiben werden? Autorenfunktion, muß deaktiviert werden.
+const UseSay = false; // Sollen Nachrichten via Say ausgegeben werden? Autorenfunktion, muß deaktiviert werden.
+const UseEventLog = true; // Sollen Nachrichten ins Eventlog geschreiben werden? Autorenfunktion, muß deaktiviert werden.
 
 //Tabellen Einstellungen
 const TblOnBgColor = "#4caf50"; //Hintergrundfarbe für Timer hat angeschaltet
@@ -25,6 +25,8 @@ const TblChoosenColor = "white"; //Rahmenfarbe für gewählten Timer, noch nicht
 const HeadBgColor = "dimgrey"; //Hintergrundfarbe des Tabellenkopfes
 const FontColor = "white"; //Textfarbe für Tabelleninhalt
 const HeadFontColor = "white"; //Textfarbe für Tabellenkopf
+const FontSize = "14px";//Textgröße für Tabelleninhalt
+const HeadFontSize = "16px";//Textgröße für Tabellenlopf
 const TblShowTimerLfdCol = true; //Tabellenspalte mit laufender Nummer anzeigen?
 const TblShowTimerActiveCol = true; //Tabellenspalte ob Timer aktiv anzeigen?
 const TblShowTimerActionCol = true; //Tabellenspalte mit Timer Aktion anzeigen?
@@ -36,11 +38,13 @@ const TblShowTimerTargetNameCol = true; //Tabellenspalte mit Namen des Timer Zie
 const TblShowTimerDaysCol = true; //Tabellenspalte mit aktiven Tagen anzeigen?
 const TblShowTimerIfPresenceCol = true; //Tabellenspalte Schaltung nur bei Anwesenheit ausgeben?
 const TblShowTimerIfNoPresenceCol = true; //Tabellenspalte Schaltung nur bei Abwesenheit ausgeben?
+const TblShowTimerMessageCol = true; //Tabellenspalte Schaltung nur bei Abwesenheit ausgeben?
 const ImgInvert = 0; // Bildfarben invertieren? Erlaubte Werte von 0 bis 1
 const TblLfdImg = "/icons-mfd-svg/time_timer.svg"; //Bild für "Timer aktiv"
 const TblActiveImg = "/icons-mfd-svg/control_on_off.svg"; //Bild für "Timer aktiv"
 const TblIfPresenceImg = "/icons-mfd-svg/status_available.svg"; //Bild für "Nur wenn anwesend"
 const TblIfNoPresenceImg = "/icons-mfd-svg/control_building_empty.svg"; //Bild für "Nur wenn abwesend"
+const TblMessageImg = "/icons-mfd-svg/message_mail.svg"; //Bild für "Nachricht senden"
 
 //Ab hier nix mehr ändern
 let TimerCount = 2; //Wieviele Timer bei SkriptERSTstart anlegen?
@@ -53,8 +57,8 @@ const ModeValues = ["time", "dawn", "sunrise", "goldenHour", "sunset", "dusk"]; 
 const ModeText = ["Zeit", "Morgendämmerung", "Sonnenaufgang", "Goldene Stunde", "Sonnenuntergang", "Abenddämmerung"]; //Array für Astrobezeichnungen  in Deutsch
 const AktionValues = [0, 1, 2];
 const AktionText = ["Ausschalten", "Einschalten", "Umschalten"];
-const Dps = ["Aktiv", "Rolle", "TimerTimestamp", "TimerAstroTimestamp", "TimerAstroShift", "TimerChoice", "TimerSonntag", "TimerMontag", "TimerDienstag", "TimerMittwoch", "TimerDonnerstag", "TimerFreitag", "TimerSamstag", "SwitchTarget", "OnlyIfPresence", "OnlyIfNoPresence"];
-const DpDefaults = [false, 1, "00:00:00", "00:00:00", 0, "time", true, true, true, true, true, true, true, "", true, true];
+const Dps = ["Aktiv", "Rolle", "TimerTimestamp", "TimerAstroTimestamp", "TimerAstroShift", "TimerChoice", "TimerSonntag", "TimerMontag", "TimerDienstag", "TimerMittwoch", "TimerDonnerstag", "TimerFreitag", "TimerSamstag", "SwitchTarget", "OnlyIfPresence", "OnlyIfNoPresence", "ActivityMessage"];
+const DpDefaults = [false, 1, "00:00:00", "00:00:00", 0, "time", true, true, true, true, true, true, true, "", true, true, true];
 //const TimerAction = []; //Objektarray für Schedules
 let MyTimer = []; //Datenarray aller Timer
 
@@ -138,8 +142,6 @@ function PrepareDps() {
     DpCount++;
 
     //Template Dps
-    //States[DpCount] = { id: praefix + "Template", initial: "", forceCreation: false, common: { read: true, write: true, name: "Template für Vis", type: "channel", def: "" } };
-    //DpCount++;
     States[DpCount] = { id: praefix + "Template" + ".Aktiv", initial: DpDefaults[0], forceCreation: false, common: { read: true, write: true, name: "Timer aktiv", type: "boolean", role: "switch", def: DpDefaults[0] } }; //Legt fest ob der Timer aktiv ist
     DpCount++;
     States[DpCount] = { id: praefix + "Template" + ".Rolle", initial: DpDefaults[1], forceCreation: false, common: { read: true, write: true, name: "Rolle", type: "number", role: "value", def: DpDefaults[1] } }; //Legt fest ob der Timer für An oder Aus zuständig ist
@@ -163,6 +165,8 @@ function PrepareDps() {
     DpCount++;
     States[DpCount] = { id: praefix + "Template" + ".OnlyIfNoPresence", initial: DpDefaults[15], forceCreation: false, common: { read: true, write: true, name: "Nur ausführen falls niemand anwesend", type: "boolean", role: "switch", def: DpDefaults[15] } }; //Legt fest ob der Timer aktiv ist
     DpCount++;
+    States[DpCount] = { id: praefix + "Template" + ".ActivityMessage", initial: DpDefaults[16], forceCreation: false, common: { read: true, write: true, name: "Benachrichtigen bei Schaltung?", type: "boolean", role: "switch", def: DpDefaults[16] } }; //Legt fest ob der Timer aktiv ist
+    DpCount++;
 
     //Alle States anlegen, Main aufrufen wenn fertig
     let numStates = States.length;
@@ -183,8 +187,6 @@ function CreateTimer(x) { //Erzeugt Timerchannel und Dps. Aufruf bei Start und A
     const States = [];
     DpCount = 0;
     //Datenpunkte anlegen 
-    //States[DpCount] = { id: praefix + x, initial: "", forceCreation: false, common: { read: true, write: true, name: "Timer" + x, type: "channel", def: "" } }; //Channel anlegen
-    //DpCount++;
     States[DpCount] = { id: praefix + x + ".Aktiv", initial: DpDefaults[0], forceCreation: false, common: { read: true, write: true, name: "Timer aktiv", type: "boolean", role: "switch", def: DpDefaults[0] } }; //Legt fest ob der Timer aktiv ist
     DpCount++;
     States[DpCount] = { id: praefix + x + ".Rolle", initial: DpDefaults[1], forceCreation: false, common: { read: true, write: false, name: "Rolle", type: "number", role: "value", def: DpDefaults[1] } }; //Legt fest ob der Timer für An oder Aus zuständig ist
@@ -208,6 +210,8 @@ function CreateTimer(x) { //Erzeugt Timerchannel und Dps. Aufruf bei Start und A
     DpCount++;
     States[DpCount] = { id: praefix + x + ".OnlyIfNoPresence", initial: DpDefaults[15], forceCreation: false, common: { read: true, write: false, name: "Nur ausführen falls niemand anwesend", type: "boolean", role: "switch", def: DpDefaults[15] } }; //Legt fest ob der Timer aktiv ist
     DpCount++;
+    States[DpCount] = { id: praefix + x + ".ActivityMessage", initial: DpDefaults[16], forceCreation: false, common: { read: true, write: false, name: "Nur ausführen falls niemand anwesend", type: "boolean", role: "switch", def: DpDefaults[16] } }; //Legt fest ob der Timer aktiv ist
+    DpCount++;
 
     //Alle States anlegen,  aufrufen wenn fertig
     let numStates = States.length;
@@ -229,26 +233,26 @@ function FillTimerArray(x) { //Erzeugt TimerArray. Aufruf bei Start und AddTimer
         //log(praefix + x + "." + Dps[y]);
         MyTimer[x][y] = getState(praefix + x + "." + Dps[y]).val;
         if (y == 4) MyTimer[x][y] = parseInt(MyTimer[x][y]); //Sicherstellen das Offset Zahl ist
+        if (y == 16) log(typeof (MyTimer[x][16]))
         //log("y=" + y + "Wert=" + MyTimer[x][y]);
     };
     if (MyTimer[x][0] == false) {
-        MyTimer[x].push("idle"); //Zusätzlichen internen Eintrag [16] für Tabellenstatus anhängen - Idle wenn Timer inaktiv
+        MyTimer[x].push("idle"); //Zusätzlichen internen Eintrag [17]=+1 für Tabellenstatus anhängen - Idle wenn Timer inaktiv
     }
     else {
         MyTimer[x].push(""); //Leer wenn Timer aktiv
     };
 
-    MyTimer[x].push(false); //Weiteren Status [17] für IsEdit anhängen
+    MyTimer[x].push(false); //Weiteren Status [18]=+2 für IsEdit anhängen
 
     if (MyTimer[x][13] == "") { //Wenn Target leer
-        MyTimer[x].push(""); //Zusätzlichen internen Eintrag [18] für Aktuellen Device Status anhängen
+        MyTimer[x].push(""); //Zusätzlichen internen Eintrag [19] für Aktuellen Device Status anhängen
     } else {
-        MyTimer[x].push(getState(MyTimer[x][13]).val);//Zusätzlichen internen Eintrag [18] für Aktuellen Device Status anhängen
+        MyTimer[x].push(getState(MyTimer[x][13]).val);//Zusätzlichen internen Eintrag [19]=+3 für Aktuellen Device Status anhängen
     };
 
-    MyTimer[x].push(null); //Weiteren Status [19] für TimerAction (TimerobjektArray für Schedule) anhängen
+    MyTimer[x].push(null); //Weiteren Status [20]=+4 für TimerAction (TimerobjektArray für Schedule) anhängen
 
-    CreateDeviceTrigger(x); //DeviceTrigger für diesen Timereintrag erstellen
     SetTimer(x); //Timer setzen
 
     if (x == TimerCount - 1) { //Erst bei letztem Eintrag Tabelle refreshen (bei Skriptstart relevant)
@@ -308,8 +312,11 @@ function SetValueListPairs() { //Erzeugt Werte und Texte für Timer Value Listen
 
 function init() {
     if (logging) log("Reaching Init()");
-    //    0         1           2                   3                   4                   5               6               7               8               8               10              11                  12              13              14              15                  16              17          18              19
-    // "Aktiv", "Rolle", "TimerTimestamp", "TimerAstroTimestamp", "TimerAstroShift", "TimerChoice", "TimerSonntag", "TimerMontag", "TimerDienstag", "TimerMittwoch", "TimerDonnerstag", "TimerFreitag", "TimerSamstag", "SwitchTarget", "OnlyIfPresence", "OnlyIfNoPresence", "TabellenStatus", "IsEdit","DeviceStatus","TimerAktion"
+    //    0         1           2                   3                   4                   5               6               7               8               9        
+    //"Aktiv", "Rolle", "TimerTimestamp", "TimerAstroTimestamp", "TimerAstroShift", "TimerChoice", "TimerSonntag", "TimerMontag", "TimerDienstag", "TimerMittwoch", 
+
+    //       10              11                  12              13              14              15                  16              17 (+1)        18 (+2)     19 (+3)        20 (+4)
+    // "TimerDonnerstag", "TimerFreitag", "TimerSamstag", "SwitchTarget", "OnlyIfPresence", "OnlyIfNoPresence","ActivityMessage", "TabellenStatus", "IsEdit","DeviceStatus","TimerAktion"
 
     TimerCount = getState(praefix + "TimerCount").val; // Initialen Timercount mit im Dp gespeicherten Wert korrigieren
     ChoosenTimer = getState(praefix + "SwitchToTimer").val; //Aktuell (in Vis) gewählter Timer
@@ -406,7 +413,7 @@ function MakeCronString(whichone) { //String nach Cronsyntax zusammenbauen für 
 function SetTimer(whichone) {
     if (MyTimer[whichone][0] == true) { //Wenn Timer aktiv
         if (logging) log("Timer " + whichone + " wird gesetzt");
-        MyTimer[whichone][19] = schedule(MakeCronString(whichone), function () { //Schedule setzen und Objektvariablen TimerAktion zuweisen
+        MyTimer[whichone][(Dps.length + 3)] = schedule(MakeCronString(whichone), function () { //Schedule setzen und Objektvariablen TimerAktion zuweisen
             DoAction(whichone); //Geplante Aktion ausführen
             if (MyTimer[whichone][5] != "time") { //Wenn Astro gewählt
                 //RefreshAstro(whichone); 
@@ -418,8 +425,8 @@ function SetTimer(whichone) {
 }
 
 function KillTimer(whichone) { //spezifischen Timer löschen
-    if (typeof (MyTimer[whichone][19]) != "object") return; //Wenn kein Schedule gesetzt Abbruch
-    clearSchedule(MyTimer[whichone][19]);
+    if (typeof (MyTimer[whichone][(Dps.length + 2)]) != "object") return; //Wenn kein Schedule gesetzt Abbruch
+    clearSchedule(MyTimer[whichone][(Dps.length + 2)]);
     if (logging) log("Timer Schedule " + whichone + " killed");
 }
 
@@ -469,31 +476,32 @@ function DoAction(whichone) {
             switch (MyTimer[whichone][1]) {
                 case 0://Wenns die Rolle Ausschalter ist
                     setState(MyTimer[whichone][13], false);//Switchtarget deaktivieren
-                    MyTimer[whichone][16] = "off";
+                    MyTimer[whichone][(Dps.length + 0)] = "off";
                     log("Timer " + whichone + " hat ausgeschaltet");
-                    Meldung("Timer " + whichone + ", " + GetDeviceName(GetParentId(MyTimer[whichone][13])) + ", hat ausgeschaltet");
+                    if (MyTimer[whichone][16]) Meldung("Timer " + whichone + ", " + GetDeviceName(GetParentId(MyTimer[whichone][13])) + ", hat ausgeschaltet");
                     break;
                 case 1:// Wenn die Rolle Anschalter ist
                     setState(MyTimer[whichone][13], true); //Switchtarget aktivieren
-                    MyTimer[whichone][16] = "on";
+                    MyTimer[whichone][(Dps.length + 0)] = "on";
                     log(MyTimer[whichone][13] + " Timer " + whichone + " hat angeschaltet");
-                    Meldung("Timer " + whichone + ", " + GetDeviceName(GetParentId(MyTimer[whichone][13])) + ", hat angeschaltet");
+                    if (MyTimer[whichone][16]) Meldung("Timer " + whichone + ", " + GetDeviceName(GetParentId(MyTimer[whichone][13])) + ", hat angeschaltet");
                     break;
                 case 2:// Wenn die Rolle Umschalter ist
                     if (getState(MyTimer[whichone][13]).val) { //Aktuellen Targetstatus lesen
                         setState(MyTimer[whichone][13], false); //Switchtarget deaktivieren wenn aktueller Status true
-                        MyTimer[whichone][16] = "off";
+                        MyTimer[whichone][(Dps.length + 0)] = "off";
                         log("Timer " + whichone + " hat ausgeschaltet");
-                        Meldung("Timer " + whichone + ", " + GetDeviceName(GetParentId(MyTimer[whichone][13])) + ", hat um= ausgeschaltet");
+                        if (MyTimer[whichone][16]) Meldung("Timer " + whichone + ", " + GetDeviceName(GetParentId(MyTimer[whichone][13])) + ", hat um= ausgeschaltet");
                     } else {
                         setState(MyTimer[whichone][13], true); //Switchtarget aktivieren wenn aktueller Status false
-                        MyTimer[whichone][16] = "on";
+                        MyTimer[whichone][(Dps.length + 0)] = "on";
                         log(MyTimer[whichone][13] + " Timer " + whichone + " hat angeschaltet");
-                        Meldung("Timer " + whichone + ", " + GetDeviceName(GetParentId(MyTimer[whichone][13])) + ", hat um= angeschaltet");
+                        if (MyTimer[whichone][16]) Meldung("Timer " + whichone + ", " + GetDeviceName(GetParentId(MyTimer[whichone][13])) + ", hat um= angeschaltet");
                     };
                     break;
                 default:
             };
+            CreateDeviceTrigger(whichone);
         };
     };
 }
@@ -510,12 +518,12 @@ function MakeTable() {
     if (logging) log("Reaching MakeTable");
 
     let BgColor = "";
-    let style0 = "style='border: 1px solid black; padding: 5px 3px; font-size:14px; font-weight: normal; text-align: center; color:" + FontColor + "; background-color:"
-    let style1 = "style='border: 1px solid black; width: 40px; padding: 5px 3px; font-size:14px; font-weight: normal; text-align: right; color:" + FontColor + "; background-color:"
-    let ImgColstyle = "style='border: 1px solid black; width: 40px; padding: 0px 5px; font-size:14px; font-weight: normal; text-align: center; color:" + FontColor + "; background-color:"
+    let style0 = "style='border: 1px solid black; padding: 5px 3px; font-size:" + FontSize + "; font-weight: normal; text-align: center; color:" + FontColor + "; background-color:"
+    let style1 = "style='border: 1px solid black; width: 40px; padding: 5px 3px; font-size:" + FontSize + "; font-weight: normal; text-align: right; color:" + FontColor + "; background-color:"
+    let ImgColstyle = "style='border: 1px solid black; width: 40px; padding: 0px 5px; font-size:" + FontSize + "; font-weight: normal; text-align: center; color:" + FontColor + "; background-color:"
 
-    let headstyle0 = "style='border: 1px solid black; padding: 0px 5px; height: 30px; font-size:16px; font-weight: bold; text-align: center; color:" + HeadFontColor + "; background-color:"
-    let headstyle1 = "style='border: 1px solid black; padding: 0px 5px; height: 30px; font-size:16px; font-weight: bold; text-align: center; color:" + HeadFontColor + "; background-color:"
+    let headstyle0 = "style='border: 1px solid black; padding: 0px 5px; height: 30px; font-size:" + HeadFontSize + "; font-weight: bold; text-align: center; color:" + HeadFontColor + "; background-color:"
+    let headstyle1 = "style='border: 1px solid black; padding: 0px 5px; height: 30px; font-size:" + HeadFontSize + "; font-weight: bold; text-align: center; color:" + HeadFontColor + "; background-color:"
     let ImgColheadstyle = "style='border: 1px solid black; height: 40px; width: 40px; text-align: center; color:" + HeadFontColor + "; background-color:"
 
     let MyTableHead = "<table style='width:100%; border: 1px solid black; border-collapse: collapse;'><tr>";
@@ -554,27 +562,30 @@ function MakeTable() {
     if (TblShowTimerIfPresenceCol && PresenceDp != "") {
         MyTableHead = MyTableHead + "<th " + ImgColheadstyle + HeadBgColor + "'><img style='margin: auto; display: block; filter: invert(" + ImgInvert + "); height: 40px;' src='" + TblIfNoPresenceImg + "'></th>";
     };
+    if (TblShowTimerMessageCol) {
+        MyTableHead = MyTableHead + "<th " + ImgColheadstyle + HeadBgColor + "'><img style='margin: auto; display: block; filter: invert(" + ImgInvert + "); height: 40px;' src='" + TblMessageImg + "'></th>";
+    };
 
     MyTableHead = MyTableHead + "</tr>";
     MyTable = MyTableHead + "<tr>";
 
     for (let x = 0; x < MyTimer.length; x++) { //Alle Timer durchlaufen 
 
-        if (MyTimer[x][18]) { //Wenn Zieldatenpunkt true
+        if (MyTimer[x][(Dps.length + 2)]) { //Wenn Zieldatenpunkt true
             if (MyTimer[x][1] == 1) { //Wenn Zielschaltung ist anschalten
-                MyTimer[x][16] = "on";
+                MyTimer[x][(Dps.length + 0)] = "on";
             } else {//Wenn Zielschaltung ist ausschalten
-                MyTimer[x][16] = "";
+                MyTimer[x][(Dps.length + 0)] = "";
             };
         } else {//Wenn Zieldatenpunkt false
             if (MyTimer[x][1] == 0) { //Wenn Zielschaltung ist ausschalten
-                MyTimer[x][16] = "off";
+                MyTimer[x][(Dps.length + 0)] = "off";
             } else {//Wenn Zielschaltung ist ausschalten
-                MyTimer[x][16] = "";
+                MyTimer[x][(Dps.length + 0)] = "";
             };
         };
 
-        switch (MyTimer[x][16]) {
+        switch (MyTimer[x][(Dps.length + 0)]) {
             case "on":
                 BgColor = TblOnBgColor;
                 break;
@@ -593,8 +604,8 @@ function MakeTable() {
         else {
             MyTable += "<tr style='border: 1px solid black;'>"
         }
-        if (MyTimer[x][17]) { //Edit in Progress
-            //log(MyTimer[x][17])
+        if (MyTimer[x][(Dps.length + 1)]) { //Edit in Progress
+            //log(MyTimer[x][(Dps.length+1)])
             BgColor = TblEditBgColor;
         };
 
@@ -659,6 +670,13 @@ function MakeTable() {
                 MyTable += "<td " + ImgColstyle + BgColor + "'>" + " " + "</td>";
             };
         };
+        if (TblShowTimerMessageCol) {
+            if (MyTimer[x][16]) {
+                MyTable += "<td " + ImgColstyle + BgColor + "'>" + "X" + "</td>";
+            } else {
+                MyTable += "<td " + ImgColstyle + BgColor + "'>" + " " + "</td>";
+            };
+        };
 
         MyTable += "</tr>";
     };
@@ -674,7 +692,7 @@ function WriteToTimer(whichone) { //Schreibt Daten vom Template in bestimmten Ti
     for (let y = 0; y < Dps.length; y++) {
         TempVal = getState(praefix + "Template" + "." + Dps[y]).val
         if (y == 4) TempVal = parseInt(TempVal); //Workaround für jqui Input welches immer Strings liefert
-        if (y == 13 ) { //Alte subscription löschen
+        if (y == 13) { //Alte subscription löschen
             unsubscribe(MyTimer[whichone][13]);
         };
         setState(praefix + whichone + "." + Dps[y], TempVal);
@@ -684,7 +702,6 @@ function WriteToTimer(whichone) { //Schreibt Daten vom Template in bestimmten Ti
     AstroOrTime(whichone); //Modus bestimmen
     SetTimer(whichone); // Timer/Schedule aktualisieren
     SwitchEditMode(whichone, false); //Editmode deaktivieren
-    CreateDeviceTrigger(whichone) //Neuen Trigger erzeugen
     MakeTable(); //Tabelle refreshen
 }
 
@@ -762,26 +779,22 @@ function WriteToTemplate(whichone, ) { //Schreibt Werte von bestimmten Timer ins
 
 function SwitchEditMode(whichone, onoff) { //Aktiviert/deaktiviert Edit Modus für bestimmten Timer
     if (logging) log("Reaching SwitchEditMode(whichone, onoff), whichonex=" + whichone + " TimerCount=" + TimerCount + " onoff=" + onoff);
-    if (whichone < TimerCount) MyTimer[whichone][17] = onoff; //Sicherstellen das Timereintrag noch existiert (ist nach Löschung nicht der Fall) und Wert setzen
+    if (whichone < TimerCount) MyTimer[whichone][(Dps.length + 1)] = onoff; //Sicherstellen das Timereintrag noch existiert (ist nach Löschung nicht der Fall) und Wert setzen
     MakeTable();
 }
 
-function CreateDeviceTrigger(x) {    //TargetDeviceTrigger
+function CreateDeviceTrigger(whichone) {    //TargetDeviceTrigger
     if (logging) log("Reaching CreateDeviceTrigger()");
-    if (MyTimer[x][0] && MyTimer[x][13] != "") { //Wenn Timer ist aktiv und Ziel nicht leer
-        if (logging) log("Subscription added for " + MyTimer[x][13] + " at Timer " + x);
-        on(MyTimer[x][13], function (dp) { //Timer Zieldatenpunkt
-            if (logging) log("TargetDevice " + x + " state changed to " + dp.state.val + ", refreshing table");
-            MyTimer[x][18] = dp.state.val; //Aktuellen Status MyTimer Array [18] zuweisen
+    if (MyTimer[whichone][0] && MyTimer[whichone][13] != "") { //Wenn Timer ist aktiv und Ziel nicht leer
+        if (logging) log("Subscription added for " + MyTimer[whichone][13] + " at Timer " + whichone);
+        on(MyTimer[whichone][13], function (dp) { //Timer Zieldatenpunkt
+            if (logging) log("TargetDevice " + whichone + " state changed to " + dp.state.val + ", refreshing table");
+            MyTimer[whichone][(Dps.length + 2)] = dp.state.val; //Aktuellen Status MyTimer Array [18] zuweisen
+            unsubscribe(MyTimer[whichone][13]);
             MakeTable();
         });
-    }
-    else if (!MyTimer[x][0] && MyTimer[x][13] != "") { //Wenn Timer ist inaktiv und Ziel nicht leer
-        if (logging) log("Subscription unsubscribed for " + MyTimer[x][13] + " at Timer " + x);
-        unsubscribe(MyTimer[x][13]);
     };
 }
-
 
 function CreateTrigger() {
     if (logging) log("Reaching CreateTrigger()");
