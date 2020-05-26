@@ -13,7 +13,7 @@
 ### Vorraussetzungen: Den zu schaltenden Geräten/Datenpunkten muss eine Funktion, z.B. "TimerTarget" zugewiesen sein.   Dieser muss einen boolschen Wert (true/false) beinhalten.
 ### **<span style="color:red">Aber nur für den Datenpunkt, nicht den gesamten Channel!!!</span>**  
 
-![timertut1.png](/admin/timertut1.png) 
+![timertut1a.png](/admin/timertut1a.png) 
 
 # Installation
 1. Wenn noch nicht geschehen, allen gewünschten Zieldatenpunkten eine Funktion zuweisen. Die Funktion muss vorher in den Aufzählungen hinzugefügt werden und könnte z.B. "TimerTarget" lauten. Soll ein anderer Begriff verwendet werden, muss dies dann auch im Script geändert werden. **Nach der Zuweisung, bzw. dem anlegen neuer Aufzählungspunkte ist es oft hilfreich die JS Instanz neu zu starten da diese bei Aufzählungsänderungen gerne mal "zickt" was dann zu Skriptfehlern führt**.
