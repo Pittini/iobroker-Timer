@@ -68,6 +68,9 @@ Das wars, viel Spaß.
 
 
 ## Changelog
+### V2.0.6 (31.5.2020)
+* Fix: Ausnahmeregel für Namensauflösung von Datenpunkten ohne übergeordnetem Channel hinzugefügt.
+* Fix: Anzeigefehler bei Wechsel von Zeit zu Astrofunktion behoben.
 ### V2.0.5 (30.5.2020)
 * Add: Datenpunkt hinzugefügt der die Zahl der aktivierten Timer zeigt.
 * Add: Abfrage hinzugefügt welche verhindert das Timer ohne Ziel aktiviert  werden können, hier wird das speichern verweigert.
