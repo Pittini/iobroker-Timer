@@ -1,4 +1,4 @@
-const SkriptVersion = "2.0.6"; //Stand 30.5.2020 - Github: https://github.com/Pittini/iobroker-Timer Forum: https://forum.iobroker.net/topic/33228/vorlage-flexibles-timerskript-vis
+const SkriptVersion = "2.0.7"; //Stand 02.06.2020 - Github: https://github.com/Pittini/iobroker-Timer Forum: https://forum.iobroker.net/topic/33228/vorlage-flexibles-timerskript-vis
 
 //Timerskript
 
@@ -54,9 +54,26 @@ let MsgMute = false;
 let Funktionen = getEnums('functions'); //Array mit Aufzählung der Funktionen
 const Targets = [];
 
+/*
+"sunrise": sunrise (top edge of the sun appears on the horizon)
+"sunriseEnd": sunrise ends (bottom edge of the sun touches the horizon)
+"goldenHourEnd": morning golden hour (soft light, best time for photography) ends
+"solarNoon": solar noon (sun is in the highest position)
+"goldenHour": evening golden hour starts
+"sunsetStart": sunset starts (bottom edge of the sun touches the horizon)
+"sunset": sunset (sun disappears below the horizon, evening civil twilight starts)
+"dusk": dusk (evening nautical twilight starts)
+"nauticalDusk": nautical dusk (evening astronomical twilight starts)
+"night": night starts (dark enough for astronomical observations)
+"nightEnd": night ends (morning astronomical twilight starts)
+"nauticalDawn": nautical dawn (morning nautical twilight starts)
+"dawn": dawn (morning nautical twilight ends, morning civil twilight starts)
+"nadir": nadir (darkest moment of the night, sun is in the lowest position)
+*/
+
 const Wochentage = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"]; //Array für createStateschleife zum anlegen der Wochentage
-const ModeValues = ["time", "dawn", "sunrise", "goldenHour", "sunset", "dusk"]; //Array für Astrobezeichnungen 
-const ModeText = ["Zeit", "Morgendämmerung", "Sonnenaufgang", "Goldene Stunde", "Sonnenuntergang", "Abenddämmerung"]; //Array für Astrobezeichnungen  in Deutsch
+const ModeValues = ["time", "dawn",              "sunrise",     "sunriseEnd",       "goldenHourEnd",  "solarNoon",     "goldenHour",      "sunsetStart",           "sunset",           "dusk",         "night",  "nadir", "nightEnd"]; //Array für Astrobezeichnungen 
+const ModeText = ["Zeit", "Morgendämmerung", "Sonnenaufgang","Ende Sonnenaufgang","Ende Blaue Stunde","Sonnenmittag",  "Goldene Stunde","Beginn Sonnenuntergang", "Sonnenuntergang", "Abenddämmerung","Nacht","Nadir","Nachtende"]; //Array für Astrobezeichnungen  in Deutsch
 const AktionValues = [0, 1, 2];
 const AktionText = ["Ausschalten", "Einschalten", "Umschalten"];
 const Dps = ["Aktiv", "Rolle", "TimerTimestamp", "TimerAstroTimestamp", "TimerAstroShift", "TimerChoice", "TimerSonntag", "TimerMontag", "TimerDienstag", "TimerMittwoch", "TimerDonnerstag", "TimerFreitag", "TimerSamstag", "SwitchTarget", "OnlyIfPresence", "OnlyIfNoPresence", "ActivityMessage"];
@@ -450,8 +467,8 @@ function AstroOrTime(whichone) { //Astro oder Zeit Gateway
     }
     else if (MyTimer[whichone][5] != "time") {
         let NewAstroTime = DetermineChoosenAstroTime(MyTimer[whichone][5].trim(), false, parseInt(MyTimer[whichone][4])); //Astrozeit ermitteln
-        setState(praefix + whichone + "." + Dps[3], NewAstroTime);
-        MyTimer[whichone][3] = NewAstroTime;
+        //setState(praefix + whichone + "." + Dps[3], NewAstroTime);
+        //MyTimer[whichone][3] = NewAstroTime;
 
         if (logging) log("Astro gewählt, Variante " + MyTimer[whichone][5]);
     };

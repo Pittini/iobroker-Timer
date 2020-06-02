@@ -41,18 +41,19 @@ Bitte beachtet das ein kompletter Schaltzyklus von an- und ausschalten aus zwei 
 Solltet Ihr keinen Anwesenheitsdatenpunkt eingetragen haben, so ist dieser Button, sowie die zugehörige Spalte in der Übersichtstabelle nicht sichtbar. Skriptintern wird die Anwesenheit auf true gesetzt.
 10.  **Der Button "Haus leer"** - Legt fest das bei nur Abwesenheit geschaltet wird (Grün=aktiv, grau=inaktiv).  
 Solltet Ihr keinen Anwesenheitsdatenpunkt eingetragen haben, so ist dieser Button, sowie die zugehörige Spalte in der Übersichtstabelle nicht sichtbar. Skriptintern wird die Anwesenheit auf true gesetzt.
+11. **Der Button "Briefumschlag"** - Hiermit kannst Du festlegen ob Du über die Aktivitäten dieses Timers benachrichtigt werden möchtest oder nicht. Default ist: benachrichtigen. Setzt voraus dass eine Benachrichtigungvariante grundsätzlich in den Skripteinstellungen aktiviert ist.
 
 Aus Sicherheits/Fehlbedienungs-gründen und um Schreibzugriffe zu minimieren werden geänderte Einstellungen erst gespeichert wenn Ihr dies explizit veranlasst. Hierzu dient:  
 
-11.  **Der Button "Diskette"**  - Durch Klick auf diesen werden die getroffenen Einstellungen gespeichert. Dieses wird optisch bestätigt durch kurzen Farbwechsel zu grün und zurück zu grau.
+12.  **Der Button "Diskette"**  - Durch Klick auf diesen werden die getroffenen Einstellungen gespeichert. Dieses wird optisch bestätigt durch kurzen Farbwechsel zu grün und zurück zu grau.
 
 Um einen neuen Timereintrag anzulegen verwendest Du: 
 
-12.  **Den Button "+"** - Ein klick auf diesen Button erzeugt einen neuen Eintrag und setzt den Fokus auf diesen so das Du sofort im Editbereich die gewünschten Werte eintragen kannst. Speichern nicht vergessen!
+13.  **Den Button "+"** - Ein klick auf diesen Button erzeugt einen neuen Eintrag und setzt den Fokus auf diesen so das Du sofort im Editbereich die gewünschten Werte eintragen kannst. Speichern nicht vergessen!
 
 Zuguterletzt gibt es noch die Möglichkeit den Timer mit dem aktuellen Fokus zu löschen, hierzu dient:
 
-13. **Der Button "Papierkorb"** - Um versehentliches Löschen zu erschweren hat dieser Button eine Sicherheitsabfrage. Der erste Klick auf den Button "Papierkorb" läßt dessen Farbe zu rot wechseln, das Symbol wandelt sich zu einem Fragezeichen. Erst ein weiterer Klick, nunmehr auf das Fragezeichen, innerhalb 3 Sekunden, löscht den Eintrag tatsächlich und unwiederbringlich. Läßt Du die 3 Sekunden ohne Klick verstreichen, wandelt sich der Button zurück zum Papierkorb, der Löschmodus wird abgebrochen.
+14. **Der Button "Papierkorb"** - Um versehentliches Löschen zu erschweren hat dieser Button eine **Sicherheitsabfrage**. Der erste Klick auf den Button "Papierkorb" läßt dessen Farbe zu rot wechseln, das Symbol wandelt sich zu einem Fragezeichen. Erst ein weiterer Klick, nunmehr auf das Fragezeichen, innerhalb 3 Sekunden, löscht den Eintrag tatsächlich und unwiederbringlich. Läßt Du die 3 Sekunden ohne Klick verstreichen, wandelt sich der Button zurück zum Papierkorb, der Löschmodus wird abgebrochen. 
 
 ### Farben der Übersichtstabelle
 **Weisser** Rahmen zeigt Dir den Eintrag mit aktuellem Fokus. Änderungen im Editbereich würden sich auf genau diese Zeile auswirken. Sobald Du im Editbereich eine erste Änderung vornimmst, wandelt sich der Hintergrund in:
@@ -68,41 +69,44 @@ Das wars, viel Spaß.
 
 
 ## Changelog
-### V2.0.6 (31.5.2020)
+### V2.0.7 (02.06.2020)
+* Change: Auswahl der Astrofunktionen auf alle verfügbaren erweitert.
+* Change: Kleine interne Codeänderungen.
+### V2.0.6 (31.05.2020)
 * Fix: Ausnahmeregel für Namensauflösung von Datenpunkten ohne übergeordnetem Channel hinzugefügt.
 * Fix: Anzeigefehler bei Wechsel von Zeit zu Astrofunktion behoben.
-### V2.0.5 (30.5.2020)
+### V2.0.5 (30.05.2020)
 * Add: Datenpunkt hinzugefügt der die Zahl der aktivierten Timer zeigt.
 * Add: Abfrage hinzugefügt welche verhindert das Timer ohne Ziel aktiviert  werden können, hier wird das speichern verweigert.
 * Add: Timer ohne Ziel werden farblich schwarz markiert.
 * Fix: Farbwechsel in der Tabelle korrigiert.
-### V2.0.4 (25.5.2020)
+### V2.0.4 (25.05.2020)
 * Add: Schriftgrößen der Tabelle nun im Einstellungsbereich konfigurierbar.
 * Add: Benachrichtigung nun zusätzlich pro Timer aktivier/deaktivier-bar, hierzu zusätzliche Spalte + Button ins Vis eingefügt.
 * Change: Triggerhandling geändert. Farbwechsel in der Tabelle erfolgt nun bei schalten des Timers (rot/grün) und zurückschalten (grau) wodurch auch immer. Alle weiteren Schaltvorgänge von außerhalb werden ignoriert.
-### V2.0.3 Beta (24.5.2020)
+### V2.0.3 Beta (24.05.2020)
 * Fix: Problem welches zur Warnmeldung:  
 "Object javascript.0.Timer.x is invalid: obj.common.type has an invalid value (channel) but has to be one of number, string, boolean, array, object, mixed, file, json" führte behoben.
 * Fix: Async Problem beim hinzufügen neuer Timer behoben welche zur Fehlermeldung:  
  "Error in callback: TypeError: Cannot read property '0' of undefined" führten.
 * Fix: Problem mit verbleibenden subscriptions behoben welche zur Fehlermeldung:  
  "Error in callback: TypeError: Cannot set property '18' of undefined" führten.
-### V2.0.2 Beta (23.5.2020)
+### V2.0.2 Beta (23.05.2020)
 * Add: Es ist nun nicht mehr möglich die Schaltung gleichzeitig bei Anwesenheit als auch bei Abwesenheit zu deaktivieren da dies zu "nie" führen würde.
-### V2.0.2 Beta (23.5.2020)
+### V2.0.2 Beta (23.05.2020)
 * Fix: Trigger für TimerTargets wird jetzt beim speichern korrekt gesetzt/aktualisiert.
 * Add: Meldungen können via Datenpunkt gemutet/deaktiviert werden. Weist Ihr diesem Datenpunkt die Funktion TimerTarget zu, kann dies auch zeitgesteuert geschehen.
 * Add: Meldungen hinzugefügt. Ausgeführte Schaltungen können jetzt via Mail/Telegram/Alexa gemeldet werden.
 * Change: Der fokusierte Timer im Vis hat nun farbigen Rahmen statt Hintergrund.
 * Fix: Presence Datenpunkt defaults geändert.
-### V2.0.1 Beta (22.5.2020)
+### V2.0.1 Beta (22.05.2020)
 * Add: einige Logpunkte hinzugefügt.
-### V2.0.0 Beta (22.5.2020)
+### V2.0.0 Beta (22.05.2020)
 * Release V2 Beta
-### V1.1.2 (7.2.2020)
+### V1.1.2 (07.02.2020)
 * Bugfix: Presence Trigger hinzugefügt.
 
-### V1.1.1 (26.1.2020)
+### V1.1.1 (26.01.2020)
 * Add: Readme erstellt
 
 ### V1.1.0 (18.12.2019)
