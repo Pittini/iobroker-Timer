@@ -64,11 +64,22 @@ Zuguterletzt gibt es noch die Möglichkeit den Timer mit dem aktuellen Fokus zu 
 
 **rot** dargestellt werden alle Einträge welche einstellungsgemäß **ausgeschaltet** wurden. Wird manuell oder durch einen anderen Timer der Status verändert, wechselt die Zeile wieder zu grau.
 
+**schwarz** dargestellt werden alle Einträge welche neu bzw. ungültig sind. Dies ist der Fall wenn kein Ziel zugeordnet wurde.
+
+
+
 Das wars, viel Spaß.
 
 
 
 ## Changelog
+### V2.1.0 (14.06.2020)
+* Fix: Diverse Aktualisierungs und Anzeigefehler für Astro behoben.
+* Fix: Mehrfachaufrufe bestimmter Funktionen korrigiert.
+* Fix: Führende Nullen bei Stundenangabe in Astrofunktionen hinzugefügt.
+* Fix: Korrektur der Astrofuntkionen wenn nur bestimmte Tage gewählt wurden.
+* Fix: Doppelauslösungen (nur durch Log oder Nachricht bemerkbar) im Sommerhalbjahr bei Astro korrigiert.
+* Fix: Auflaufen von Schedules korrigiert.
 ### V2.0.7 (02.06.2020)
 * Change: Auswahl der Astrofunktionen auf alle verfügbaren erweitert.
 * Change: Kleine interne Codeänderungen.
