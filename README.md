@@ -73,11 +73,13 @@ Das wars, viel Spaß.
 
 
 ## Changelog
+### V2.1.1 (18.06.2020)
+* Add: Namen der Schaltziele können nun geändert werden. Änderungen werden automatisch mit anderen Timern synchronisiert welche das gleiche Ziel haben, Auswahlliste wird automatisch angepasst. Zusätzliches Eingabefeld (über "Ziel") und Button (rechts neben "Ziel") in Vis Vorlage hinzugefügt.
 ### V2.1.0 (14.06.2020)
 * Fix: Diverse Aktualisierungs und Anzeigefehler für Astro behoben.
 * Fix: Mehrfachaufrufe bestimmter Funktionen korrigiert.
 * Fix: Führende Nullen bei Stundenangabe in Astrofunktionen hinzugefügt.
-* Fix: Korrektur der Astrofuntkionen wenn nur bestimmte Tage gewählt wurden.
+* Fix: Korrektur der Astrofunktionen wenn nur bestimmte Tage gewählt wurden.
 * Fix: Doppelauslösungen (nur durch Log oder Nachricht bemerkbar) im Sommerhalbjahr bei Astro korrigiert.
 * Fix: Auflaufen von Schedules korrigiert.
 ### V2.0.7 (02.06.2020)
