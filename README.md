@@ -73,6 +73,10 @@ Das wars, viel Spaß.
 
 
 ## Changelog
+### V2.1.2 (28.06.2020)
+* Fix: Fehler bei noch leeren Timern behoben.
+### V2.1.2 (20.06.2020)
+* Fix: Fehler abgefangen der auftrat wenn Timerzeit ohne Sekunden angegeben wurde.
 ### V2.1.1 (18.06.2020)
 * Add: Namen der Schaltziele können nun geändert werden. Änderungen werden automatisch mit anderen Timern synchronisiert welche das gleiche Ziel haben, Auswahlliste wird automatisch angepasst. Zusätzliches Eingabefeld (über "Ziel") und Button (rechts neben "Ziel") in Vis Vorlage hinzugefügt.
 ### V2.1.0 (14.06.2020)
