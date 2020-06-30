@@ -1,4 +1,4 @@
-const SkriptVersion = "2.1.3"; //Stand 20.06.2020 - Github: https://github.com/Pittini/iobroker-Timer Forum: https://forum.iobroker.net/topic/33228/vorlage-flexibles-timerskript-vis
+const SkriptVersion = "2.1.4"; //Stand 30.06.2020 - Github: https://github.com/Pittini/iobroker-Timer Forum: https://forum.iobroker.net/topic/33228/vorlage-flexibles-timerskript-vis
 
 //Timerskript
 
@@ -275,9 +275,9 @@ function FillTimerArray(x) { //Erzeugt TimerArray. Aufruf bei Start und AddTimer
         CreateDeviceTrigger(TriggerArray.push(MyTimer[x][13]) - 1); //Ziel zu Triggerarray hinzufügen und mit Rückgemeldeten Index Trigger erstellen
     };
 
-    if (MyTimer[x][17] == "") { //Wenn Smartname nicht vorhanden, auf default setzen
+    if (MyTimer[x][17] == "" && MyTimer[x][13] != "") { //Wenn Smartname nicht vorhanden und Ziel nicht leer, auf default setzen
         temp = GetParentId(MyTimer[x][13])
-        if (temp != "") {
+        if (temp != "" && typeof temp != "undefined") {
             MyTimer[x][17] = getObject(temp, "common").common.name;
         } else {
             MyTimer[x][17] = "";
@@ -363,20 +363,18 @@ function SetValueListPairs() { //Erzeugt Werte und Texte für Timer Value Listen
 }
 
 function CreateTimerTargetsNameList() { //Ermittelt Channelnamen, oder Smartnamen wenn vorhanden
-    let NewTargetNames = [];
-    for (let x = 0; x < Targets.length; x++) { //Alle Ziele und Timer durchgehen, im ersten Durchlauf Liste erzeugen
+    if (logging) log("Reaching CreateTimerTargetsNameList()")
+
+    let NewTargetNames = TargetNames.join(";").split(";");
+    //log(TargetNames.join(";").split(";"));
+
+    for (let x = 0; x < Targets.length; x++) { //Alle Ziele durchgehen, im ersten Durchlauf Liste erzeugen
         for (let y = 0; y < TimerCount; y++) { //Alle Timer
             if (MyTimer[y][13] == Targets[x]) { //Wenn Switchtarget entspricht einem Eintrag in der Targetslist
-                if (MyTimer[y][17] != TargetNames[x]) { // und Smartname entspricht nicht dem Orig. Namen
+                if (MyTimer[y][17] != TargetNames[x] && MyTimer[y][17] != "") { // und Smartname entspricht nicht dem Orig. Namen
                     NewTargetNames[x] = MyTimer[y][17]; //NewTargetNames korrigieren
-                    log("NewTargetNames[" + x + "] " + TargetNames[x] + " corrected to " + MyTimer[y][17] + " y=" + y)
+                    //log("NewTargetNames[" + x + "] " + TargetNames[x] + " corrected to " + MyTimer[y][17] + " y=" + y)
                 }
-                else { // und Smartname = Orig. Name
-                    if (typeof (NewTargetNames[x]) == "undefined") { //Wenn noch kein Smartname vorhanden
-                        NewTargetNames[x] = TargetNames[x];
-                        log("NewTargetNames[" + x + "] " + TargetNames[x] + " set to " + NewTargetNames[x] + " y=" + y)
-                    };
-                };
             };
         };
     };
@@ -393,12 +391,15 @@ function CreateTimerTargetsNameList() { //Ermittelt Channelnamen, oder Smartname
         };
     };
 
+    if (logging) log("Original TargetNames are:" + TargetNames);
+
     TargetNames = NewTargetNames;
+
     setState(praefix + "TimerTargetValues", Targets.join(";")); //Datenpunkt für Vis Listenfeld füllen
     setState(praefix + "TimerTargetText", NewTargetNames.join(";")); //Datenpunkt für Vis Listenfeld füllen
 
-    if (logging) log(Targets);
-    if (logging) log(NewTargetNames);
+    if (logging) log("Possible Target are:" + Targets);
+    if (logging) log("New TargetNames are:" + NewTargetNames);
 }
 
 function init() {
@@ -424,15 +425,13 @@ function init() {
             if (Funktion == WelcheFunktionVerwenden) { //Wenn Function ist z.B. TimerTarget
                 for (let y in members) { // Loop über alle TimerTarget Members
                     Targets[y] = members[y];
-                    //TempTimerTargets += Targets[y] + ";"; //Erzeugt Liste mit Targets
                     TargetNames[y] = getObject(GetParentId(Targets[y]), "common").common.name;
-
-                    //TempTimerTargetNames += TargetNames[y] + ";"; //Erzeugt Liste mit Target Names
-                    //TempTimerTargetNames += DetermineTimerTargetsName(Targets[y]) + ";"; //Erzeugt Liste mit Target Names
                 };
-                log(Targets.length + " Targets found - Targets are: " + Targets);
-                //setState(praefix + "TimerTargetValues",Targets.join(";") ); //Datenpunkt für Vis Listenfeld füllen
-                //setState(praefix + "TimerTargetText", TargetNames.join(";")); //Datenpunkt für Vis Listenfeld füllen
+                //log(Targets.length + " Targets found - Targets are: " + Targets);
+                //log("Names are: " + TargetNames);
+
+                setState(praefix + "TimerTargetValues", Targets.join(";")); //Datenpunkt für Vis Listenfeld füllen
+                setState(praefix + "TimerTargetText", TargetNames.join(";")); //Datenpunkt für Vis Listenfeld füllen
             };
         };
     };
@@ -579,6 +578,8 @@ function MakeCronString(whichone, NextActiveDayIndex) { //String nach Cronsyntax
 
 
 function SetTimer(whichone, GoToTommorrow) { //spezifischen Timer setzen
+    if (logging) log("Reaching SetTimer(whichone=," + whichone + " GoToTommorrow=" + GoToTommorrow + ")");
+
     if (MyTimer[whichone][0] == true) { //Wenn Timer aktiv
         if (logging) log("Timer " + (whichone + 1) + " will be set, GoToTommorrow=" + GoToTommorrow);
         let NextActiveDay;
@@ -611,7 +612,7 @@ function KillTimer(whichone) { //spezifischen Timer löschen
 function CheckTodayAstroIsOver(AstroChoice, Shift) {    //Berücksichtigen ob Event schon vorbei ist und dann für morgen setzen
     if (logging) log("Reaching CheckTodayAstroIsOver(AstroChoice=" + AstroChoice + " Shift=" + Shift + ")");
     Shift = parseInt(Shift); //Sicherstellen dass Shift eine Zahl ist
-    let today = new Date();
+    //let today = new Date();
     let jetzt = new Date();
 
     let AstroTime = getAstroDate(AstroChoice); //Heutige Astrotime einlesen
@@ -633,7 +634,7 @@ function DetermineChoosenAstroTime(AstroChoice, AddDays, Shift) { //Zeit für ge
     //Berücksichtigen ob Event schon vorbei ist und dann für morgen setzen
     Shift = parseInt(Shift); //Sicherstellen dass Shift eine Zahl ist
     let today = new Date();
-    let jetzt = new Date();
+    //let jetzt = new Date();
     let NextActiveDay = today.setDate(today.getDate() + AddDays);
     let NextActiveDayAstroTime = getAstroDate(AstroChoice, NextActiveDay);
     NextActiveDayAstroTime.setMinutes(NextActiveDayAstroTime.getMinutes() + Shift);//zammrechna
@@ -706,7 +707,6 @@ function MakeTable() {
     let ImgColstyle = "style='border: 1px solid black; width: 40px; padding: 0px 5px; font-size:" + FontSize + "; font-weight: normal; text-align: center; color:" + FontColor + "; background-color:"
 
     let headstyle0 = "style='border: 1px solid black; padding: 0px 5px; height: 30px; font-size:" + HeadFontSize + "; font-weight: bold; text-align: center; color:" + HeadFontColor + "; background-color:"
-    let headstyle1 = "style='border: 1px solid black; padding: 0px 5px; height: 30px; font-size:" + HeadFontSize + "; font-weight: bold; text-align: center; color:" + HeadFontColor + "; background-color:"
     let ImgColheadstyle = "style='border: 1px solid black; height: 40px; width: 40px; text-align: center; color:" + HeadFontColor + "; background-color:"
 
     let MyTableHead = "<table style='width:100%; border: 1px solid black; border-collapse: collapse;'><tr>";
@@ -1053,14 +1053,22 @@ function CreateTrigger() {
             if (x == 4 && getState(praefix + "Template." + Dps[5]).val != "time") { //AstroShift geändert
                 if (logging) log("AstroShift edited");
                 setState(praefix + "Template." + Dps[3], DetermineChoosenAstroTime(getState(praefix + "Template." + Dps[5]).val, DetermineNextActiveAstroDay(-1, false)[1], dp.state.val)); //Neuberechnete Zeit im Template anzeigen
-
             };
 
             if (x == 5 && dp.state.val != "time") { //TimerChoice geändert und Astro gewählt
                 if (logging) log("Astro choosen");
                 setState(praefix + "Template." + Dps[3], DetermineChoosenAstroTime(dp.state.val, DetermineNextActiveAstroDay(-1, false)[1], getState(praefix + "Template." + Dps[4]).val)); //Zu gewählter Astrofunktion passende Zeit anzeigen
-
             };
+
+            if (x == 13) { //Änderung TimerTarget
+                if (logging) log("Template TimerTarget changed, typeof=" + typeof dp.state.val + " Wert=" + dp.state.val);
+                if (typeof dp.state.val != "undefined" && dp.state.val != "") {
+                    MyTimerTemplate[17] = TargetNames[Targets.indexOf(dp.state.val)]; //Smartname ermitteln und setzen
+                    setState(praefix + "Template." + Dps[17], MyTimerTemplate[17]); //Smartname schreiben
+                };
+                //log("MyTimerTemplate[17]=" + MyTimerTemplate[17])
+            };
+
 
             if (x == 14) { //OnlyIfPresence - Block verhinder dass sowohl bei Anwesenheit als auch bei Abwesenheit abgewählt werden können was zu "nie" führen würde
                 if (!dp.state.val && !getState(praefix + "Template." + Dps[15]).val) {

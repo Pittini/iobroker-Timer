@@ -73,7 +73,7 @@ Das wars, viel Spaß.
 
 
 ## Changelog
-### V2.1.2 (28.06.2020)
+### V2.1.4 (30.06.2020)
 * Fix: Fehler bei noch leeren Timern behoben.
 ### V2.1.2 (20.06.2020)
 * Fix: Fehler abgefangen der auftrat wenn Timerzeit ohne Sekunden angegeben wurde.
