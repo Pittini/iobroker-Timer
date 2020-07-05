@@ -1,5 +1,9 @@
 # Legt eine beliebige Anzahl von Timern an mit folgenden Features:
 
+**If you like it, please consider a donation:**
+                                                                          
+[![paypal](https://www.paypalobjects.com/en_US/DK/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=GGF786JBJNYRN&source=url) 
+
 ## Features
 1. Alle benötigten Datenpunkte werden automatisch erstellt.
 2. Jeder Timer steuert genau einen Schaltvorgang mit true/false. Für einen kompletten ein/aus Zyklus müssen also 2 Timer genutzt werden.
@@ -8,6 +12,7 @@
 5. Timer hat Astrofunktion, bei Auswahl einer Astrofunktion kann hier zusätzlich ein +- Offset angegeben werden.
 6. Timer wird komplett via Vis gesteuert, keinerlei Skriptänderungen nötig um Timer anzulegen, zu löschen oder zu ändern.
 7. Vis zeigt Status der Schaltziele durch Farbwechsel.
+
 
 ## WICHTIG!!!
 ### Vorraussetzungen: Den zu schaltenden Geräten/Datenpunkten muss eine Funktion, z.B. "TimerTarget" zugewiesen sein.   Dieser muss einen boolschen Wert (true/false) beinhalten.
