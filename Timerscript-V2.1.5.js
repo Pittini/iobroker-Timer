@@ -1,4 +1,4 @@
-const SkriptVersion = "2.0.6"; //Stand 30.5.2020 - Github: https://github.com/Pittini/iobroker-Timer Forum: https://forum.iobroker.net/topic/33228/vorlage-flexibles-timerskript-vis
+const SkriptVersion = "2.1.5"; //Stand 19.07.2020 - Github: https://github.com/Pittini/iobroker-Timer Forum: https://forum.iobroker.net/topic/33228/vorlage-flexibles-timerskript-vis
 
 //Timerskript
 
@@ -26,11 +26,12 @@ const TblChoosenColor = "white"; //Rahmenfarbe für gewählten Timer, noch nicht
 const HeadBgColor = "dimgrey"; //Hintergrundfarbe des Tabellenkopfes
 const FontColor = "white"; //Textfarbe für Tabelleninhalt
 const HeadFontColor = "white"; //Textfarbe für Tabellenkopf
-const FontSize = "14px";//Textgröße für Tabelleninhalt
+const FontSize = "12px";//Textgröße für Tabelleninhalt
 const HeadFontSize = "16px";//Textgröße für Tabellenlopf
 const TblShowTimerLfdCol = true; //Tabellenspalte mit laufender Nummer anzeigen?
 const TblShowTimerActiveCol = true; //Tabellenspalte ob Timer aktiv anzeigen?
 const TblShowTimerActionCol = true; //Tabellenspalte mit Timer Aktion anzeigen?
+const TblShowTimerSendValueCol = true; //Tabellenspalte mit Sendewerten anzeigen?
 const TblShowTimerModeCol = true; //Tabellenspalte mit Timermodus anzeigen?
 const TblShowTimerTimeCol = true; //Tabellenspalte mit Schaltzeit anzeigen? 
 const TblShowTimerAstroOffsetCol = true; //Tabellenspalte mit Astro Offset anzeigen?
@@ -53,16 +54,35 @@ let ActiveTimerCount = 0; //Timer welche aktiv sind
 let MsgMute = false;
 let Funktionen = getEnums('functions'); //Array mit Aufzählung der Funktionen
 const Targets = [];
+let TargetNames = [];
+/*
+"sunrise": sunrise (top edge of the sun appears on the horizon)
+"sunriseEnd": sunrise ends (bottom edge of the sun touches the horizon)
+"goldenHourEnd": morning golden hour (soft light, best time for photography) ends
+"solarNoon": solar noon (sun is in the highest position)
+"goldenHour": evening golden hour starts
+"sunsetStart": sunset starts (bottom edge of the sun touches the horizon)
+"sunset": sunset (sun disappears below the horizon, evening civil twilight starts)
+"dusk": dusk (evening nautical twilight starts)
+"nauticalDusk": nautical dusk (evening astronomical twilight starts)
+"night": night starts (dark enough for astronomical observations)
+"nightEnd": night ends (morning astronomical twilight starts)
+"nauticalDawn": nautical dawn (morning nautical twilight starts)
+"dawn": dawn (morning nautical twilight ends, morning civil twilight starts)
+"nadir": nadir (darkest moment of the night, sun is in the lowest position)
+*/
 
 const Wochentage = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"]; //Array für createStateschleife zum anlegen der Wochentage
-const ModeValues = ["time", "dawn", "sunrise", "goldenHour", "sunset", "dusk"]; //Array für Astrobezeichnungen 
-const ModeText = ["Zeit", "Morgendämmerung", "Sonnenaufgang", "Goldene Stunde", "Sonnenuntergang", "Abenddämmerung"]; //Array für Astrobezeichnungen  in Deutsch
-const AktionValues = [0, 1, 2];
-const AktionText = ["Ausschalten", "Einschalten", "Umschalten"];
-const Dps = ["Aktiv", "Rolle", "TimerTimestamp", "TimerAstroTimestamp", "TimerAstroShift", "TimerChoice", "TimerSonntag", "TimerMontag", "TimerDienstag", "TimerMittwoch", "TimerDonnerstag", "TimerFreitag", "TimerSamstag", "SwitchTarget", "OnlyIfPresence", "OnlyIfNoPresence", "ActivityMessage"];
-const DpDefaults = [false, 1, "00:00:00", "00:00:00", 0, "time", true, true, true, true, true, true, true, "", true, true, true];
+const WeekdaysShort = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"]; //Array zur Bestimmung des aktuellen und morgigen Tages für Astro
+const ModeValues = ["time", "dawn", "sunrise", "sunriseEnd", "goldenHourEnd", "solarNoon", "goldenHour", "sunsetStart", "sunset", "dusk", "night", "nadir", "nightEnd"]; //Array für Astrobezeichnungen 
+const ModeText = ["Zeit", "Morgendämmerung", "Sonnenaufgang", "Ende Sonnenaufgang", "Ende Blaue Stunde", "Sonnenmittag", "Goldene Stunde", "Beginn Sonnenuntergang", "Sonnenuntergang", "Abenddämmerung", "Nacht", "Nadir", "Nachtende"]; //Array für Astrobezeichnungen  in Deutsch
+const AktionValues = [0, 1, 2, 3];
+const AktionText = ["Ausschalten", "Einschalten", "Umschalten", "Wert senden"];
+const Dps = ["Aktiv", "Rolle", "TimerTimestamp", "TimerAstroTimestamp", "TimerAstroShift", "TimerChoice", "TimerSonntag", "TimerMontag", "TimerDienstag", "TimerMittwoch", "TimerDonnerstag", "TimerFreitag", "TimerSamstag", "SwitchTarget", "OnlyIfPresence", "OnlyIfNoPresence", "ActivityMessage", "SwitchTargetSmartName", "SendValue"];
+const DpDefaults = [false, 1, "00:00:00", "00:00:00", 0, "time", true, true, true, true, true, true, true, "", true, true, true, "", "-"];
 
 let MyTimer = []; //Datenarray aller Timer, darf nicht const sein weil bei Timerlöschung komplette Neuzuweisung erfolgt
+const MyTimerTemplate = [];
 const TriggerArray = []; //Sammelt die Schaltdatenpunkte der Timer ohne Duplikate
 
 let Presence = true; //Voreinstellung Anwesenheit ist wahr, für den Fall das kein PresenceDp angegeben
@@ -146,6 +166,8 @@ function PrepareDps() {
     DpCount++;
     States[DpCount] = { id: praefix + "ActiveTimerCount", initial: 0, forceCreation: false, common: { read: true, write: true, name: "Anzahl der aktiven Timer", type: "number", def: 0 } };
     DpCount++;
+    States[DpCount] = { id: praefix + "ShowNameEdit", initial: false, forceCreation: false, common: { read: true, write: true, name: "Feld für Smartnameänderung einblenden?", type: "boolean", def: false } };
+    DpCount++;
 
     //Template Dps
     States[DpCount] = { id: praefix + "Template" + ".Aktiv", initial: DpDefaults[0], forceCreation: false, common: { read: true, write: true, name: "Timer aktiv", type: "boolean", role: "switch", def: DpDefaults[0] } }; //Legt fest ob der Timer aktiv ist
@@ -173,6 +195,10 @@ function PrepareDps() {
     DpCount++;
     States[DpCount] = { id: praefix + "Template" + ".ActivityMessage", initial: DpDefaults[16], forceCreation: false, common: { read: true, write: true, name: "Benachrichtigen bei Schaltung?", type: "boolean", role: "switch", def: DpDefaults[16] } }; //Legt fest ob der Timer aktiv ist
     DpCount++;
+    States[DpCount] = { id: praefix + "Template" + ".SwitchTargetSmartName", initial: DpDefaults[17], forceCreation: false, common: { read: true, write: true, name: "Name für Ziel", type: "string", def: DpDefaults[17] } };
+    DpCount++;
+    States[DpCount] = { id: praefix + "Template" + ".SendValue", initial: DpDefaults[18], forceCreation: false, common: { read: true, write: true, name: "Zu sendender Wert", type: "string", def: DpDefaults[18] } };
+    DpCount++;
 
     //Alle States anlegen, Main aufrufen wenn fertig
     let numStates = States.length;
@@ -180,7 +206,7 @@ function PrepareDps() {
         createState(state.id, state.initial, state.forceCreation, state.common, function () {
             numStates--;
             if (numStates === 0) {
-                if (logging) log("Initial CreateStates fertig!");
+                if (logging) log("Initial CreateStates finished!");
                 main();
             };
         });
@@ -218,6 +244,10 @@ function CreateTimer(x) { //Erzeugt Timerchannel und Dps. Aufruf bei Start und A
     DpCount++;
     States[DpCount] = { id: praefix + x + ".ActivityMessage", initial: DpDefaults[16], forceCreation: false, common: { read: true, write: false, name: "Nur ausführen falls niemand anwesend", type: "boolean", role: "switch", def: DpDefaults[16] } }; //Legt fest ob der Timer aktiv ist
     DpCount++;
+    States[DpCount] = { id: praefix + x + ".SwitchTargetSmartName", initial: DpDefaults[17], forceCreation: false, common: { read: true, write: true, name: "Name für Ziel", type: "string", def: DpDefaults[17] } };
+    DpCount++;
+    States[DpCount] = { id: praefix + x + ".SendValue", initial: DpDefaults[18], forceCreation: false, common: { read: true, write: true, name: "Zu sendender Wert", type: "string", def: DpDefaults[18] } };
+    DpCount++;
 
     //Alle States anlegen,  aufrufen wenn fertig
     let numStates = States.length;
@@ -225,8 +255,9 @@ function CreateTimer(x) { //Erzeugt Timerchannel und Dps. Aufruf bei Start und A
         createState(state.id, state.initial, state.forceCreation, state.common, function () {
             numStates--;
             if (numStates === 0) { //Sicherstellen das alle Dps erzeugt wurden bevor eingelesen wird
-                if (logging) log("Timer CreateState(s) fertig!");
+                if (logging) log("Timer CreateState(s) finished!");
                 FillTimerArray(x);
+                FillTimerTemplateArray();
             };
         });
     });
@@ -236,36 +267,53 @@ function CreateTimer(x) { //Erzeugt Timerchannel und Dps. Aufruf bei Start und A
 function FillTimerArray(x) { //Erzeugt TimerArray. Aufruf bei Start und AddTimer
     //if (logging) log("Reaching FillTimerArray, x=" + x)
     MyTimer[x] = [];
-
+    let temp;
     for (let y = 0; y < Dps.length; y++) {
         MyTimer[x][y] = getState(praefix + x + "." + Dps[y]).val;
         if (y == 4) MyTimer[x][y] = parseInt(MyTimer[x][y]); //Sicherstellen das Offset Zahl ist
-        if (y == 0 && MyTimer[x][y]) ActiveTimerCount++
+        if (y == 0 && MyTimer[x][y]) ActiveTimerCount++;
     };
 
     setState(praefix + "ActiveTimerCount", ActiveTimerCount); //Zähler der aktiven Timer in Dp schreiben
 
     if (MyTimer[x][13] != "" && TriggerArray.indexOf(MyTimer[x][13]) == -1) { //Wenn Ziel nicht leer und Ziel ist noch nicht in Triggerarray
-        //TriggerArray.push(MyTimer[x][13]) - 1; //
         CreateDeviceTrigger(TriggerArray.push(MyTimer[x][13]) - 1); //Ziel zu Triggerarray hinzufügen und mit Rückgemeldeten Index Trigger erstellen
     };
 
-
-    if (MyTimer[x][0] == false) {
-        MyTimer[x][Dps.length] = "disabled"; //Zusätzlichen internen Eintrag [17] für Tabellenstatus anhängen - Idle wenn Timer inaktiv
-    }
-    else {
-        MyTimer[x][Dps.length] = "idle"; //Leer wenn Timer aktiv
+    if (MyTimer[x][17] == "" && MyTimer[x][13] != "") { //Wenn Smartname nicht vorhanden und Ziel nicht leer, auf default setzen
+        temp = GetParentId(MyTimer[x][13])
+        if (temp != "" && typeof temp != "undefined") {
+            MyTimer[x][17] = getObject(temp, "common").common.name;
+        } else {
+            MyTimer[x][17] = "";
+        };
+        setState(praefix + x + ".SwitchTargetSmartName", MyTimer[x][17]);
     };
 
-    MyTimer[x][Dps.length + 1] = false; //Weiteren Status [18] für IsEdit anhängen
+    if (MyTimer[x][13] == "") {
+        MyTimer[x][Dps.length] = "disabled"; //Zusätzlichen internen Eintrag [18] für Tabellenstatus anhängen - disabled wenn Timer inaktiv
+    }
+    else {
+        MyTimer[x][Dps.length] = "idle"; //Idle wenn Timer aktiv
+    };
 
-    MyTimer[x][Dps.length + 3] = null; //Weiteren Status [20] für TimerAction (TimerobjektArray für Schedule) anhängen
+    MyTimer[x][Dps.length + 1] = false; //Weiteren Status [19] für IsEdit anhängen
+    //20 aktuell unbenutzt
+    MyTimer[x][Dps.length + 3] = null; //Weiteren Status [21] für TimerAction (TimerobjektArray für Schedule) anhängen
 
-    SetTimer(x); //Timer setzen
+    SetTimer(x, false); //Timer setzen
 
     if (x == TimerCount - 1) { //Erst bei letztem Eintrag Tabelle refreshen (bei Skriptstart relevant)
+        CreateTimerTargetsNameList();
+
         MakeTable();
+    };
+}
+
+function FillTimerTemplateArray() { //Liest die gepeicherten Templatedaten ein
+    for (let x = 0; x < Dps.length; x++) {
+        MyTimerTemplate[x] = getState(praefix + "Template" + "." + Dps[x]).val;
+        if (x == 4) MyTimerTemplate[x] = parseInt(MyTimerTemplate[x]); //Sicherstellen das Offset Zahl ist
     };
 }
 
@@ -287,7 +335,7 @@ function ConvertPresence(TempPresence = true) {//Wert vom Anwesenheitsdatenpunkt
     };
 }
 
-function CreateTimerCountList() {
+function CreateTimerCountList() { //Erzeugt Werte für Timer Valuelists (Vis)
     if (logging) log("Reaching CreateTimerCountList()")
 
     //Timerauswahl ValueList
@@ -307,7 +355,7 @@ function CreateTimerCountList() {
     setState(praefix + "TimerCountText", ValueTextDummy);
 }
 
-function SetValueListPairs() { //Erzeugt Werte und Texte für Timer Value Listenfeld
+function SetValueListPairs() { //Erzeugt Werte und Texte für Timer Value Listenfeld (Vis)
     if (logging) log("Reaching SetValueListPairs()");
 
     //Mode ValueList
@@ -319,23 +367,62 @@ function SetValueListPairs() { //Erzeugt Werte und Texte für Timer Value Listen
     setState(praefix + "AktionText", AktionText.join(";"));
 }
 
+function CreateTimerTargetsNameList() { //Ermittelt Channelnamen, oder Smartnamen wenn vorhanden
+    if (logging) log("Reaching CreateTimerTargetsNameList()")
+
+    let NewTargetNames = TargetNames.join(";").split(";");
+    //log(TargetNames.join(";").split(";"));
+
+    for (let x = 0; x < Targets.length; x++) { //Alle Ziele durchgehen, im ersten Durchlauf Liste erzeugen
+        for (let y = 0; y < TimerCount; y++) { //Alle Timer
+            if (MyTimer[y][13] == Targets[x]) { //Wenn Switchtarget entspricht einem Eintrag in der Targetslist
+                if (MyTimer[y][17] != TargetNames[x] && MyTimer[y][17] != "") { // und Smartname entspricht nicht dem Orig. Namen
+                    NewTargetNames[x] = MyTimer[y][17]; //NewTargetNames korrigieren
+                    //log("NewTargetNames[" + x + "] " + TargetNames[x] + " corrected to " + MyTimer[y][17] + " y=" + y)
+                }
+            };
+        };
+    };
+
+    for (let x = 0; x < Targets.length; x++) { //Alle Ziele und Timer durchgehen, im 2. Durchlauf alle TimerSmartnames anpassen wenn nötig
+        for (let y = 0; y < TimerCount; y++) {
+            if (MyTimer[y][13] == Targets[x]) { //Wenn Switchtarget entspricht einem Eintrag in der Targetslist
+                if (MyTimer[y][17] != NewTargetNames[x]) { //Aktueller Smartname entspricht nicht der Liste
+                    log("Smartname synchronisiert x=" + x + " y=" + y + " AlterSmartname=" + MyTimer[y][17] + " neuer Smartname=" + NewTargetNames[x])
+                    MyTimer[y][17] = NewTargetNames[x];
+                    setState(praefix + y + ".SwitchTargetSmartName", MyTimer[y][17]);
+                };
+            };
+        };
+    };
+
+    if (logging) log("Original TargetNames are:" + TargetNames);
+
+    TargetNames = NewTargetNames;
+
+    setState(praefix + "TimerTargetValues", Targets.join(";")); //Datenpunkt für Vis Listenfeld füllen
+    setState(praefix + "TimerTargetText", NewTargetNames.join(";")); //Datenpunkt für Vis Listenfeld füllen
+
+    if (logging) log("Possible Target are:" + Targets);
+    if (logging) log("New TargetNames are:" + NewTargetNames);
+}
+
 function init() {
     if (logging) log("Reaching Init()");
     //    0         1           2                   3                   4                   5               6               7               8               9        
     //"Aktiv", "Rolle", "TimerTimestamp", "TimerAstroTimestamp", "TimerAstroShift", "TimerChoice", "TimerSonntag", "TimerMontag", "TimerDienstag", "TimerMittwoch", 
 
-    //       10              11                  12              13              14              15                  16              17 (+0)        18 (+1)     19 (+2)        20 (+3)
-    // "TimerDonnerstag", "TimerFreitag", "TimerSamstag", "SwitchTarget", "OnlyIfPresence", "OnlyIfNoPresence","ActivityMessage", "TabellenStatus", "IsEdit","unused","TimerAktion"
+    //       10              11                  12              13              14              15                  16           	17  		 18          19 (+0)        20 (+1)    21 (+2)     22 (+3)
+    // "TimerDonnerstag", "TimerFreitag", "TimerSamstag", "SwitchTarget", "OnlyIfPresence", "OnlyIfNoPresence","ActivityMessage","SmartName", "SendValue", "TabellenStatus", "IsEdit","unused","TimerAktion"
 
     TimerCount = getState(praefix + "TimerCount").val; // Initialen Timercount mit im Dp gespeicherten Wert korrigieren
     ChoosenTimer = getState(praefix + "SwitchToTimer").val; //Aktuell (in Vis) gewählter Timer
     MsgMute = getState(praefix + "MsgMute").val;
+
     for (let x in Funktionen) {        // loop ueber alle Functions - Erzeugt Listen mit TimerTargets und deren Namen
         let Funktion = Funktionen[x].name;
-        let TempTimerTargets = "";
-        let TempTimerTargetNames = "";
         if (Funktion == undefined) {
-            log("Keine Funktion gefunden");
+            log("Keine Funktion gefunden!", "error");
         }
         else {
             if (typeof Funktion == 'object') Funktion = Funktion.de;
@@ -343,14 +430,13 @@ function init() {
             if (Funktion == WelcheFunktionVerwenden) { //Wenn Function ist z.B. TimerTarget
                 for (let y in members) { // Loop über alle TimerTarget Members
                     Targets[y] = members[y];
-                    TempTimerTargets += Targets[y] + ";";
-                    TempTimerTargetNames += getObject(GetParentId(Targets[y]), "common").common.name + ";";
+                    TargetNames[y] = getObject(GetParentId(Targets[y]), "common").common.name;
                 };
-                log(Targets.length + " Targets found - Targets are: " + Targets);
-                TempTimerTargets = TempTimerTargets.substr(0, TempTimerTargets.length - 1); //Letzten Strichpunkt wieder entfernen
-                TempTimerTargetNames = TempTimerTargetNames.substr(0, TempTimerTargetNames.length - 1);//Letzten Strichpunkt wieder entfernen
-                setState(praefix + "TimerTargetValues", TempTimerTargets); //Datenpunkt für Vis Listenfeld füllen
-                setState(praefix + "TimerTargetText", TempTimerTargetNames); //Datenpunkt für Vis Listenfeld füllen
+                //log(Targets.length + " Targets found - Targets are: " + Targets);
+                //log("Names are: " + TargetNames);
+
+                setState(praefix + "TimerTargetValues", Targets.join(";")); //Datenpunkt für Vis Listenfeld füllen
+                setState(praefix + "TimerTargetText", TargetNames.join(";")); //Datenpunkt für Vis Listenfeld füllen
             };
         };
     };
@@ -365,7 +451,7 @@ function init() {
 function main() {
     if (logging) log("Reaching Main");
     init();
-    CreateTimerCountList()
+    CreateTimerCountList();
     SetValueListPairs();
     ConvertPresence();
     CreateTrigger();
@@ -379,10 +465,10 @@ function GetParentId(DpId) { //Liest Id des dem DP übergeordnetem Channel
         parentDevicelId = DpId;
     }
     else if (DpId.indexOf("hm-rpc.") != -1 || DpId.indexOf("shelly.") != -1 || DpId.indexOf("yeelight-2.") != -1) { //Wenn HM, shelly oder yeelight, 2 Ebenen zurück
-        parentDevicelId = DpId.split(".").slice(0, -2).join(".");// Id an den Punkten in Array schreiben (split), die 2 letzten Elemente von hinten entfernen (slice) und den Rest wieder zu String zusammensetzen
+        parentDevicelId = DpId.split(".").slice(0, -2).join(".");// Id an den Punkten in Array schreiben (split), die 2 letzten Elemente von hinten entfernen (slice) und den Rest wieder zu String zusammensetzen (join)
     }
     else { //Ansonsten 1 Ebene zurück
-        parentDevicelId = DpId.split(".").slice(0, -1).join("."); // Id an den Punkten in Array schreiben (split), das letzte Element von hinten entfernen (slice) und den Rest wieder zu String zusammensetzen
+        parentDevicelId = DpId.split(".").slice(0, -1).join("."); // Id an den Punkten in Array schreiben (split), das letzte Element von hinten entfernen (slice) und den Rest wieder zu String zusammensetzen (join)
     };
     //if (logging) log("DpId= " + DpId + " ParentDeviceId=" + parentDevicelId);
     return parentDevicelId;
@@ -394,10 +480,10 @@ function GetDeviceName(DeviceId) { //Liest Namen des zum Schaltdatenpunkt gehör
     return getObject(DeviceId, "common").common.name;
 }
 
-//******************************************************** */
+//*********************** Core Functions ********************************* */
 
-function MakeCronString(whichone) { //String nach Cronsyntax zusammenbauen für Schedule
-    //if (logging) log("Reaching MakeCronString(whichone), whichone="+whichone);
+function CreateTimeDaysString(whichone) { //Erzeugt Teilstring für Cron mit gewählten Tagen für reine Zeittimer
+    if (logging) log("Reaching CreateTimeDaysString(whichone=" + whichone + ")");
 
     let DaysSubString = "";
     for (let x = 0; x < 7; x++) {
@@ -406,128 +492,229 @@ function MakeCronString(whichone) { //String nach Cronsyntax zusammenbauen für 
         };
     };
     DaysSubString = DaysSubString.substr(0, DaysSubString.length - 1); //Komma am Ende entfernen
-    if (DaysSubString == "0,1,2,3,4,5,6") { DaysSubString = "*"; }; // Sternchen wenn alle Tage gewählt
 
-    let tempString = "";
-    if (MyTimer[whichone][5] == "time") { //Wenn Zeit gewählt
-        tempString = SplitTime(MyTimer[whichone][2])[1] + " " + SplitTime(MyTimer[whichone][2])[0] + " * * " + DaysSubString;
-        if (logging) log("CronString für Timer " + whichone + " erstellt " + tempString);
-    }
-    else if (MyTimer[whichone][5] != "time") { //Wenn Astro gewählt
-        tempString = SplitTime(MyTimer[whichone][3])[1] + " " + SplitTime(MyTimer[whichone][3])[0] + " * * " + DaysSubString;
-        if (logging) log("Cronstring für Timer " + whichone + " Astro erstellt " + tempString);
-    };
-    return tempString;
+    if (DaysSubString == "0,1,2,3,4,5,6") { DaysSubString = "*"; }; // Sternchen wenn alle Tage gewählt
+    return DaysSubString;
 }
 
-//spezifischen Timer setzen
-function SetTimer(whichone) {
+function DetermineNextActiveAstroDay(whichone, GoToTommorrow) {//Erzeugt Teilstring für Cron mit nächstem aktiven Astrotag, sowie die Anzahl der Tage bis nächsten aktiven Astrotag
+    if (logging) log("Reaching DetermineNextActiveAstroDay(whichone=" + whichone + " GoToTommorrow=" + GoToTommorrow + ")");
+
+    let TodayDay = formatDate(new Date(), "W"); //Aktuellen Wochentag ermitteln
+    let TodayDayIndex = WeekdaysShort.indexOf(TodayDay); //Index des aktuellen Wochentags ermitteln
+    let TodayAstroIsOver;
+
+    if (GoToTommorrow) {
+        log("GoToTommorrow requested, TodayAstroIsOver automatically set to true, skipping check")
+        TodayAstroIsOver = true;
+    }
+    else {
+        if (whichone == -1) { //Wenn Aufruf durch Template
+            TodayAstroIsOver = CheckTodayAstroIsOver(MyTimerTemplate[5], MyTimerTemplate[4]); //Prüfen ob Astroereignis heute schon vorüber
+        } else {
+            TodayAstroIsOver = CheckTodayAstroIsOver(MyTimer[whichone][5], MyTimer[whichone][4]);
+        };
+    };
+
+    let NextActiveDayIndex = TodayDayIndex; // Auswertung bei heutigem Tag beginnen
+
+    if (logging) log("Initial NextActiveDay=" + Wochentage[NextActiveDayIndex] + " =" + NextActiveDayIndex + " TodayAstroIsOver=" + TodayAstroIsOver);
+
+    let FoundNextActiveDay = false; //Marker um nach Schleifendurchlauf noch zu wissen wo der erste Treffer war
+    let FoundIndex = 0;
+    let FoundDiff = 0;
+    for (let x = 0; x < 7; x++) {// 7 Tage durchgehen
+        if (whichone == -1) { //Aufruf durch Template
+            if (MyTimerTemplate[NextActiveDayIndex + 6] == true && !FoundNextActiveDay) { //Wenn counter Tag ist aktiv und nächster aktiver Tag noch nicht gefunden
+                //if (logging) log("Called from Template, NextActiveDay=" + Wochentage[NextActiveDayIndex] + " =" + NextActiveDayIndex + " DayDiff=" + x);
+                if (x == 0 && (TodayAstroIsOver)) { //Wenn Treffer ist heute, und Event bereits vorüber
+                    FoundIndex = NextActiveDayIndex + 1;
+                    FoundDiff = x + 1;
+                    if (logging) log("NextActiveDay=today and TodayAstroIsOver=" + TodayAstroIsOver + " and GoToTommorrow=" + GoToTommorrow);
+                } else {
+                    FoundIndex = NextActiveDayIndex;
+                    FoundDiff = x;
+                    if (logging) log("NextActiveDayIndex=" + NextActiveDayIndex + " and x=" + x + " and TodayAstroIsOver=" + TodayAstroIsOver + " and GoToTommorrow=" + GoToTommorrow);
+                }
+                FoundNextActiveDay = true;
+            };
+        }
+        else { //Aufruf durch Timer
+            if (MyTimer[whichone][NextActiveDayIndex + 6] == true && !FoundNextActiveDay) { //Wenn counter Tag ist aktiv
+                //if (logging) log("Called from Timer, NextActiveDay=" + Wochentage[NextActiveDayIndex] + " =" + NextActiveDayIndex + " DayDiff=" + x);
+                if (x == 0 && (TodayAstroIsOver)) { //Wenn Treffer ist heute, dann prüfen ob Event bereits vorüber
+                    FoundIndex = NextActiveDayIndex + 1;
+                    FoundDiff = x + 1;
+                    if (logging) log("NextActiveDay=today and TodayAstroIsOver=" + TodayAstroIsOver + " and GoToTommorrow=" + GoToTommorrow);
+                } else {
+                    FoundIndex = NextActiveDayIndex;
+                    FoundDiff = x;
+                    if (logging) log("NextActiveDayIndex=" + NextActiveDayIndex + " and x=" + x + " and TodayAstroIsOver=" + TodayAstroIsOver + " and GoToTommorrow=" + GoToTommorrow);
+                }
+                FoundNextActiveDay = true;
+            };
+        };
+
+        if (NextActiveDayIndex > 6) { //Bei Wochensprung
+            NextActiveDayIndex = 0;
+        } else {
+            NextActiveDayIndex++;
+        };
+    };
+
+    if (FoundIndex > 6) FoundIndex = 0;
+    if (logging) log("Returning FoundIndex=" + FoundIndex + " FoundDiff=" + FoundDiff);
+    return [String(FoundIndex), FoundDiff]; //Index und Tagesdifferenz als Array zurückgeben
+}
+
+function MakeCronString(whichone, NextActiveDayIndex) { //String nach Cronsyntax zusammenbauen für Schedule. 
+    if (logging) log("Reaching MakeCronString(whichone=" + whichone + ")");
+    let CronString = "";
+    if (MyTimer[whichone][5] == "time") { //Wenn Zeit gewählt
+        CronString = SplitTime(MyTimer[whichone][2])[2] + " " + SplitTime(MyTimer[whichone][2])[1] + " " + SplitTime(MyTimer[whichone][2])[0] + " * * " + NextActiveDayIndex;
+        if (logging) log("CronString for Timer " + (whichone + 1) + " created " + CronString);
+    }
+    else if (MyTimer[whichone][5] != "time") { //Wenn Astro gewählt
+        CronString = SplitTime(MyTimer[whichone][3])[2] + " " + SplitTime(MyTimer[whichone][3])[1] + " " + SplitTime(MyTimer[whichone][3])[0] + " * * " + NextActiveDayIndex;
+        if (logging) log("Cronstring for Timer " + (whichone + 1) + " Astro created " + CronString);
+    };
+    return CronString;
+}
+
+
+function SetTimer(whichone, GoToTommorrow) { //spezifischen Timer setzen
+    if (logging) log("Reaching SetTimer(whichone=," + whichone + " GoToTommorrow=" + GoToTommorrow + ")");
+
     if (MyTimer[whichone][0] == true) { //Wenn Timer aktiv
-        if (logging) log("Timer " + whichone + " wird gesetzt");
-        MyTimer[whichone][(Dps.length + 3)] = schedule(MakeCronString(whichone), function () { //Schedule setzen und Objektvariablen TimerAktion zuweisen
+        if (logging) log("Timer " + (whichone + 1) + " will be set, GoToTommorrow=" + GoToTommorrow);
+        let NextActiveDay;
+        if (MyTimer[whichone][5] != "time") { //Wenn Astro gewählt
+            NextActiveDay = DetermineNextActiveAstroDay(whichone, GoToTommorrow); //Array mit nächstem Astrotag als Index und Differenz zu heute 0=Index 1=Diff
+            let NewAstroTime = DetermineChoosenAstroTime(MyTimer[whichone][5].trim(), NextActiveDay[1], MyTimer[whichone][4]); //Neue Astrozeit generieren nach Ausführung
+            setState(praefix + whichone + "." + Dps[3], NewAstroTime);
+            MyTimer[whichone][3] = NewAstroTime;
+        } else {
+            NextActiveDay = [CreateTimeDaysString(whichone)];
+        };
+
+        MyTimer[whichone][(Dps.length + 3)] = schedule(MakeCronString(whichone, NextActiveDay[0]), function () { //Cronstring erzeugen und Schedule setzen sowie Objektvariablen TimerAktion zuweisen
             DoAction(whichone); //Geplante Aktion ausführen
             if (MyTimer[whichone][5] != "time") { //Wenn Astro gewählt
-                //RefreshAstro(whichone); 
-                let NewAstroTime = DetermineChoosenAstroTime(MyTimer[whichone][5].trim(), true, parseInt(MyTimer[whichone][4])); //Neue Astrozeit generieren nach Ausführung
-                setState(praefix + whichone + "." + Dps[3], NewAstroTime);
-                MyTimer[whichone][3] = NewAstroTime;
-
-                SetTimer(whichone); //Neuen Schedule anlegen (selbstaufruf der Funktion)
+                if (KillTimer(whichone)) SetTimer(whichone, true); //Neuen Schedule anlegen (selbstaufruf der Funktion) für nächsten aktiven Tag und vorher alten Timer löschen
             };
         });
     };
 }
 
 function KillTimer(whichone) { //spezifischen Timer löschen
-    if (typeof (MyTimer[whichone][(Dps.length + 3)]) != "object") return; //Wenn kein Schedule gesetzt Abbruch
-    clearSchedule(MyTimer[whichone][(Dps.length + 3)]);
-    if (logging) log("Timer Schedule " + whichone + " killed");
+    if (typeof (MyTimer[whichone][(Dps.length + 3)]) == "object") {
+        clearSchedule(MyTimer[whichone][(Dps.length + 3)]);
+        if (logging) log("Timer Schedule " + (whichone + 1) + " killed");
+    };
+    return true; //
 }
 
-function AstroOrTime(whichone) { //Astro oder Zeit Gateway
-    if (MyTimer[whichone][5] == "time") {
-        if (logging) log("Zeit gewählt " + MyTimer[whichone][2]);
-    }
-    else if (MyTimer[whichone][5] != "time") {
-        let NewAstroTime = DetermineChoosenAstroTime(MyTimer[whichone][5].trim(), false, parseInt(MyTimer[whichone][4])); //Astrozeit ermitteln
-        setState(praefix + whichone + "." + Dps[3], NewAstroTime);
-        MyTimer[whichone][3] = NewAstroTime;
+function CheckTodayAstroIsOver(AstroChoice, Shift) {    //Berücksichtigen ob Event schon vorbei ist und dann für morgen setzen
+    if (logging) log("Reaching CheckTodayAstroIsOver(AstroChoice=" + AstroChoice + " Shift=" + Shift + ")");
+    Shift = parseInt(Shift); //Sicherstellen dass Shift eine Zahl ist
+    //let today = new Date();
+    let jetzt = new Date();
 
-        if (logging) log("Astro gewählt, Variante " + MyTimer[whichone][5]);
+    let AstroTime = getAstroDate(AstroChoice); //Heutige Astrotime einlesen
+    AstroTime.setMinutes(AstroTime.getMinutes() + Shift);//zammrechna
+
+    //log("Astrotime=" + AstroTime.getTime() + " jetzt=" + jetzt.getTime())
+    if (AstroTime.getTime() <= jetzt.getTime()) { //Wenn Astrozeit vor aktueller Zeit, ist Event vorüber
+        if (logging) log("Es ist " + jetzt.toLocaleTimeString('de-DE', { hour12: false }) + ", Astroevent today passed by at: " + getAstroDate(AstroChoice).toLocaleTimeString('de-DE', { hour12: false }));
+        return true;
+    }
+    else { //Wenn Astrozeit nach aktueller Zeit dann Astrozeit von heute verwenden
+        if (logging) log("Es ist " + jetzt.toLocaleTimeString('de-DE', { hour12: false }) + ", Astroevent today is still upcoming at: " + getAstroDate(AstroChoice).toLocaleTimeString('de-DE', { hour12: false }));
+        return false;
     };
 }
 
-function DetermineChoosenAstroTime(AstroChoice, GoToTomorrow, Shift) { //Zeit für gewählte Astrozeit eintragen
-    if (logging) log("Reaching DetermineChoosenAstroTime(AstroChoice, GoToTomorrow, Shift), AstroChoice=" + AstroChoice + " GoToTomorrow=" + GoToTomorrow + " Shift=" + Shift);
+function DetermineChoosenAstroTime(AstroChoice, AddDays, Shift) { //Zeit für gewählte Astrozeit ermitteln
+    if (logging) log("Reaching DetermineChoosenAstroTime( AstroChoice=" + AstroChoice + " AddDays=" + AddDays + " Shift=" + Shift + ")");
     //Berücksichtigen ob Event schon vorbei ist und dann für morgen setzen
     Shift = parseInt(Shift); //Sicherstellen dass Shift eine Zahl ist
     let today = new Date();
-    let jetzt = new Date();
-    let tomorrow = today.setDate(today.getDate() + 1);
-    let tomorrowAstroTime = getAstroDate(AstroChoice, tomorrow);
-    tomorrowAstroTime.setMinutes(tomorrowAstroTime.getMinutes() + Shift);//zammrechna
-    if (logging) log(AstroChoice + " beginnt heute um:" + getAstroDate(AstroChoice).toLocaleTimeString('de-DE', { hour12: false }) + " und beginnt morgen um " + tomorrowAstroTime.toLocaleTimeString('de-DE', { hour12: false }));
-    //log(getAstroDate(AstroChoice).getTime() + " " + today.getTime() + " " + today.toLocaleTimeString());
-    //log("Astro=" + getAstroDate(AstroChoice) + " Heute=" + jetzt + " " + "todayzeit=" + today.toLocaleTimeString());
+    //let jetzt = new Date();
+    let NextActiveDay = today.setDate(today.getDate() + AddDays);
+    let NextActiveDayAstroTime = getAstroDate(AstroChoice, NextActiveDay);
+    NextActiveDayAstroTime.setMinutes(NextActiveDayAstroTime.getMinutes() + Shift);//zammrechna
+    if (logging) log(AstroChoice + " today starts at:" + getAstroDate(AstroChoice).toLocaleTimeString('de-DE', { hour12: false }) + " and starts next active day at " + NextActiveDayAstroTime.toLocaleTimeString('de-DE', { hour12: false }));
 
-    let AstroTime = getAstroDate(AstroChoice); //Astrotime einlesen
-    AstroTime.setMinutes(AstroTime.getMinutes() + Shift);//zammrechna
-    AstroTime.toLocaleTimeString('de-DE', { hour12: false });
-    if (AstroTime.getTime() <= jetzt.getTime() || GoToTomorrow == true) { //Wenn Astrozeit vor aktueller Zeit oder wenn explicit verlangt, Astrozeit von morgen verwenden 
-        if (logging) log("Astrotime von morgen verwendet, Event is heute bereits vorüber = " + tomorrowAstroTime.toLocaleTimeString('de-DE', { hour12: false }));
-        return tomorrowAstroTime.toLocaleTimeString('de-DE', { hour12: false });
+    if (logging) log("Returning next active Astrotime=" + NextActiveDayAstroTime.toLocaleTimeString('de-DE', { hour12: false }));
+    if (NextActiveDayAstroTime.toLocaleTimeString('de-DE', { hour12: false }).length == 7) { //Einstellige Stundenzahl korrigieren
+        return "0" + NextActiveDayAstroTime.toLocaleTimeString('de-DE', { hour12: false });
     }
-    else if (AstroTime.getTime() > jetzt.getTime()) { //Wenn Astrozeit nach aktueller Zeit dann Astrozeit von heute verwenden
-        if (logging) log("Astrotime von heute verwendet, Event kommt heute noch = " + AstroTime.toLocaleTimeString('de-DE', { hour12: false }) + " Morgen=" + tomorrowAstroTime.toLocaleTimeString('de-DE', { hour12: false }));
-        return AstroTime.toLocaleTimeString('de-DE', { hour12: false });
+    else {
+        return NextActiveDayAstroTime.toLocaleTimeString('de-DE', { hour12: false });
     };
 }
 
-function DoAction(whichone) {
+function DoAction(whichone) { //Hier wird geschaltet, Zentralfunktion
     if (logging) log("Reaching DoAction(), aktiv=" + MyTimer[whichone][0] + " Rolle=" + MyTimer[whichone][1] + " whichone=" + whichone + " Presence=" + Presence + " MyTimer[whichone][13]=" + MyTimer[whichone][13] + " MyTimer[whichone][14]=" + MyTimer[whichone][14]);
     if (MyTimer[whichone][0] == true) { //Wenn Timer aktiv
         if ((MyTimer[whichone][14] == true && Presence == true) || (MyTimer[whichone][15] == true && Presence == false) || (MyTimer[whichone][15] == true && MyTimer[whichone][14] == true)) { //Wenn "bei Anwesenheit" aktiv
             TargetSwitchingInProgress = true;
-            //MyTimer[whichone][19] = true; //Switching für diesen Timer aktuell aktivieren
             let OldState = getState(MyTimer[whichone][13]).val;
 
             switch (MyTimer[whichone][1]) {
                 case 0://Wenns die Rolle Ausschalter ist
                     setState(MyTimer[whichone][13], false);//Switchtarget deaktivieren
                     MyTimer[whichone][(Dps.length + 0)] = "off";
-                    log("Timer " + whichone + ", " + GetDeviceName(GetParentId(MyTimer[whichone][13])) + ", hat ausgeschaltet");
-                    if (MyTimer[whichone][16]) Meldung("Timer " + whichone + ", " + GetDeviceName(GetParentId(MyTimer[whichone][13])) + ", hat ausgeschaltet");
+                    log("Timer " + (whichone + 1) + ", " + GetDeviceName(GetParentId(MyTimer[whichone][13])) + ", switched off");
+                    if (MyTimer[whichone][16]) Meldung("Timer " + (whichone + 1) + ", " + GetDeviceName(GetParentId(MyTimer[whichone][13])) + ", hat ausgeschaltet");
                     break;
                 case 1:// Wenn die Rolle Anschalter ist
                     setState(MyTimer[whichone][13], true); //Switchtarget aktivieren
                     MyTimer[whichone][(Dps.length + 0)] = "on";
-                    log("Timer " + whichone + ", " + GetDeviceName(GetParentId(MyTimer[whichone][13])) + ", hat angeschaltet");
-                    if (MyTimer[whichone][16]) Meldung("Timer " + whichone + ", " + GetDeviceName(GetParentId(MyTimer[whichone][13])) + ", hat angeschaltet");
+                    log("Timer " + (whichone + 1) + ", " + GetDeviceName(GetParentId(MyTimer[whichone][13])) + ", switched on");
+                    if (MyTimer[whichone][16]) Meldung("Timer " + (whichone + 1) + ", " + GetDeviceName(GetParentId(MyTimer[whichone][13])) + ", hat eingeschaltet");
                     break;
                 case 2:// Wenn die Rolle Umschalter ist
                     if (OldState) { //Aktuellen Targetstatus lesen
                         setState(MyTimer[whichone][13], false); //Switchtarget deaktivieren wenn aktueller Status true
                         MyTimer[whichone][(Dps.length + 0)] = "off";
-                        log("Timer " + whichone + ", " + GetDeviceName(GetParentId(MyTimer[whichone][13])) + ", hat um= ausgeschaltet");
-                        if (MyTimer[whichone][16]) Meldung("Timer " + whichone + ", " + GetDeviceName(GetParentId(MyTimer[whichone][13])) + ", hat um= ausgeschaltet");
+                        log("Timer " + (whichone + 1) + ", " + GetDeviceName(GetParentId(MyTimer[whichone][13])) + ", changed over to off");
+                        if (MyTimer[whichone][16]) Meldung("Timer " + (whichone + 1) + ", " + GetDeviceName(GetParentId(MyTimer[whichone][13])) + ", hat (um)-ausgeschaltet");
                     } else {
                         setState(MyTimer[whichone][13], true); //Switchtarget aktivieren wenn aktueller Status false
                         MyTimer[whichone][(Dps.length + 0)] = "on";
-                        log("Timer " + whichone + ", " + GetDeviceName(GetParentId(MyTimer[whichone][13])) + ", hat um= angeschaltet");
-                        if (MyTimer[whichone][16]) Meldung("Timer " + whichone + ", " + GetDeviceName(GetParentId(MyTimer[whichone][13])) + ", hat um= angeschaltet");
+                        log("Timer " + (whichone + 1) + ", " + GetDeviceName(GetParentId(MyTimer[whichone][13])) + ", changed over to on");
+                        if (MyTimer[whichone][16]) Meldung("Timer " + (whichone + 1) + ", " + GetDeviceName(GetParentId(MyTimer[whichone][13])) + ", hat (um)-angeschaltet");
+                    };
+                    break;
+                case 3:// Wenn Rolle ist "Wert senden"  
+                    log("MyTimer[whichone][18]=" + MyTimer[whichone][18])
+                    if (MyTimer[whichone][18] != "" && MyTimer[whichone][18] != "-" && typeof MyTimer[whichone][18] != "undefined") {
+                        setState(MyTimer[whichone][13], ConvertSendValue(MyTimer[whichone][18])); //Switchtarget Wert senden
+                        MyTimer[whichone][(Dps.length + 0)] = "on";
+                        log("Timer " + (whichone + 1) + ", " + GetDeviceName(GetParentId(MyTimer[whichone][13])) + ", send value " + MyTimer[whichone][18] + " as " + typeof ConvertSendValue(MyTimer[whichone][18]));
+                        if (MyTimer[whichone][16]) Meldung("Timer " + (whichone + 1) + ", " + GetDeviceName(GetParentId(MyTimer[whichone][13])) + ", send value " + MyTimer[whichone][18] + " as " + typeof ConvertSendValue(MyTimer[whichone][18]));
+
                     };
                     break;
                 default:
             };
-            SetLockStates(-1, whichone)
+            SetLockStates(-1, whichone); //Interne States setzen für Tabellenfarbmarkierungen
         };
     };
 }
 
-//Zeit in Stunden und Minuten teilen für Cronstring
-function SplitTime(Time) {
-    let timesplit = Time.split(":", 2);
-    //h = timesplit[0]  / m = timesplit[1];
+function ConvertSendValue(SendValue) {
+    if (SendValue == "true") return true;
+    if (SendValue == "false") return false;
+    if (parseInt(SendValue) != NaN) return parseInt(SendValue);
+    return SendValue;
+}
+
+function SplitTime(Time) { //Zeit in Stunden und Minuten teilen für Cronstring
+    let timesplit = Time.split(":");
+    //h = timesplit[0]  / m = timesplit[1  / s = timesplit[2]];
+    if (typeof (timesplit[2]) == "undefined") timesplit[2] = "00";
     return timesplit;
 }
 
@@ -541,7 +728,6 @@ function MakeTable() {
     let ImgColstyle = "style='border: 1px solid black; width: 40px; padding: 0px 5px; font-size:" + FontSize + "; font-weight: normal; text-align: center; color:" + FontColor + "; background-color:"
 
     let headstyle0 = "style='border: 1px solid black; padding: 0px 5px; height: 30px; font-size:" + HeadFontSize + "; font-weight: bold; text-align: center; color:" + HeadFontColor + "; background-color:"
-    let headstyle1 = "style='border: 1px solid black; padding: 0px 5px; height: 30px; font-size:" + HeadFontSize + "; font-weight: bold; text-align: center; color:" + HeadFontColor + "; background-color:"
     let ImgColheadstyle = "style='border: 1px solid black; height: 40px; width: 40px; text-align: center; color:" + HeadFontColor + "; background-color:"
 
     let MyTableHead = "<table style='width:100%; border: 1px solid black; border-collapse: collapse;'><tr>";
@@ -556,9 +742,13 @@ function MakeTable() {
     if (TblShowTimerActionCol) {
         MyTableHead = MyTableHead + "<th width='80px' " + headstyle0 + HeadBgColor + "'>Aktion</th>";
     };
+    if (TblShowTimerSendValueCol) {
+        MyTableHead = MyTableHead + "<th width='60px' " + headstyle0 + HeadBgColor + "'>Sende</th>";
+    };
     if (TblShowTimerModeCol) {
         MyTableHead = MyTableHead + "<th width='60px' " + headstyle0 + HeadBgColor + "'>Modus</th>";
     };
+
     if (TblShowTimerTimeCol) {
         MyTableHead = MyTableHead + "<th width='40px' " + headstyle0 + HeadBgColor + "'>Zeit</th>";
     };
@@ -588,7 +778,7 @@ function MakeTable() {
     MyTable = MyTableHead + "<tr>";
 
     for (let x = 0; x < MyTimer.length; x++) { //Alle Timer durchlaufen 
-        if (logging) log("MyTimer[" + x + "][17]=" + MyTimer[x][(Dps.length + 0)] + " - TriggerArrayIndex=" + TriggerArray.indexOf(MyTimer[x][13]))
+        //if (logging) log("MyTimer[" + x + "][17]=" + MyTimer[x][(Dps.length + 0)] + " - TriggerArrayIndex=" + TriggerArray.indexOf(MyTimer[x][13]))
         switch (MyTimer[x][(Dps.length + 0)]) {
             case "on":
                 BgColor = TblOnBgColor;
@@ -631,6 +821,26 @@ function MakeTable() {
         if (TblShowTimerActionCol) {
             MyTable += "<td " + style0 + BgColor + "'>" + AktionText[MyTimer[x][1]] + "</td>";
         };
+        if (TblShowTimerSendValueCol) {
+            switch (MyTimer[x][1]) {
+                case 0: //aus
+                    MyTable += "<td " + style0 + BgColor + "'>" + "false" + "</td>";
+                    break;
+                case 1: //ein
+                    MyTable += "<td " + style0 + BgColor + "'>" + "true" + "</td>";
+                    break;
+                case 2:
+                    MyTable += "<td " + style0 + BgColor + "'>" + "" + "</td>";
+                    break;
+                case 3:
+                    MyTable += "<td " + style0 + BgColor + "'>" + MyTimer[x][18] + "</td>";
+                    break;
+                default:
+                    MyTable += "<td " + style0 + BgColor + "'>" + "" + "</td>";
+
+            };
+        };
+
         if (TblShowTimerModeCol) {
             MyTable += "<td " + style0 + BgColor + "'>" + ModeText[ModeValues.indexOf(MyTimer[x][5])] + "</td>";
         };
@@ -650,7 +860,9 @@ function MakeTable() {
         };
         if (TblShowTimerTargetNameCol) {
             //log("MyTimer[x][13]=" + MyTimer[x][13] + " x=" + x)
-            MyTable += "<td " + style1 + BgColor + "'>" + GetDeviceName(GetParentId(MyTimer[x][13])) + "</td>";
+            //MyTable += "<td " + style1 + BgColor + "'>" + GetDeviceName(GetParentId(MyTimer[x][13])) + "</td>";
+            MyTable += "<td " + style1 + BgColor + "'>" + MyTimer[x][17] + "</td>";
+
         };
         if (TblShowTimerDaysCol) {
             let TempDaysString = "";
@@ -723,9 +935,14 @@ function WriteToTimer(whichone) { //Schreibt Daten vom Template in bestimmten Ti
         MyTimer[whichone][Dps.length + 0] = "idle";
     };
 
+    if (MyTimerTemplate[17].indexOf(TargetNames) == -1) { //
+        CreateTimerTargetsNameList();
+        if (logging) log("CreateTimerTargetsNameList() refresh done, MyTimerTemplate[17].indexOf(TargetNames)=" + MyTimerTemplate[17].indexOf(TargetNames));
+    };
+
+
     KillTimer(whichone); //Vorhandenen Timer/Schedule löschen
-    AstroOrTime(whichone); //Modus bestimmen
-    SetTimer(whichone); // Timer/Schedule aktualisieren
+    SetTimer(whichone, false); // Timer/Schedule aktualisieren
     SwitchEditMode(whichone, false); //Editmode deaktivieren
     MakeTable(); //Tabelle refreshen
 }
@@ -795,17 +1012,26 @@ function DeleteTimer(whichone = ChoosenTimer) {
     MakeTable();
 }
 
-function WriteToTemplate(whichone, ) { //Schreibt Werte von bestimmten Timer ins Template
+function WriteToTemplate(whichone) { //Schreibt Werte von bestimmten Timer ins Template
     if (logging) log("Reaching WriteToTemplate(whichone), whichone=" + whichone);
     if (logging) log("Typeof MyTimer[" + whichone + "]=" + typeof MyTimer[whichone])
     if (typeof MyTimer[whichone] == "undefined") { //Wenn bei neuem Timer Eintrag noch nicht gesetzt (async Problem)
         for (let y = 0; y < Dps.length; y++) {
             setState(praefix + "Template" + "." + Dps[y], DpDefaults[y]); //Defaults setzen
+            MyTimerTemplate[y] = DpDefaults[y];
         };
     }
     else {
         for (let y = 0; y < Dps.length; y++) {
             setState(praefix + "Template" + "." + Dps[y], MyTimer[whichone][y]); //Normale Werte aus Array setzen
+            MyTimerTemplate[y] = MyTimer[whichone][y];
+            if (MyTimerTemplate[5] != "time") { //und Astro aktiv ist
+                if (logging) log("Astro choosen and weekday changed");
+                //Astrozeit neuberechnen und eintragen
+                // Nächsten aktiven Tag ermitteln und in der nächsten Zeile die Zeit dafür berechnen
+                setState(praefix + "Template." + Dps[3], DetermineChoosenAstroTime(MyTimerTemplate[5], DetermineNextActiveAstroDay(-1, false)[1], MyTimerTemplate[4])); //Zu gewählter Astrofunktion passende Zeit anzeigen unter Berücksichtigung welcher Tag der nächste aktive ist
+            };
+
         };
     };
 }
@@ -816,13 +1042,13 @@ function SwitchEditMode(whichone, onoff) { //Aktiviert/deaktiviert Edit Modus f�
     MakeTable();
 }
 
-function SetLockStates(TriggerIndex, SwitchingTimerIndex) {
+function SetLockStates(TriggerIndex, SwitchingTimerIndex) { //Setzt interne States für Tabellenfarbkennzeichnungen.
     if (logging) log("Reaching SetLockStates() TriggerIndex=" + TriggerIndex + " SwitchingTimerIndex=" + SwitchingTimerIndex);
 
     if (TriggerIndex != -1) { //Aufruf durch Trigger
         for (let x = 0; x < MyTimer.length; x++) { //Alle Timer durchlaufen
             if (TriggerArray[TriggerIndex] == MyTimer[x][13]) {
-                MyTimer[x][17] = "idle";
+                MyTimer[x][(Dps.length + 0)] = "idle";
                 if (logging) log("Device " + MyTimer[x][13] + " switched from outside, setting TargetDeviceTimer " + (x + 1) + " to idle")
             };
 
@@ -831,12 +1057,11 @@ function SetLockStates(TriggerIndex, SwitchingTimerIndex) {
     else if (SwitchingTimerIndex != -1) { //Aufruf durch Schaltung (DoAction)
         for (let x = 0; x < MyTimer.length; x++) { //Alle Timer durchlaufen
             if (x != SwitchingTimerIndex && MyTimer[SwitchingTimerIndex][13] == MyTimer[x][13]) { //Alle Timer außer aktuellem berücksichtigen welche gleichen Zieldatenpunkt wie aktueller Timer haben
-                MyTimer[x][17] = "idle"; //Diese auf idle setzen
+                MyTimer[x][(Dps.length + 0)] = "idle"; //Diese auf idle setzen
             };
         };
     };
     setTimeout(function () {
-        // MyTimer[SwitchingTimerIndex][19] = false; //Switching für diesen Timer wieder deaktivieren
         TargetSwitchingInProgress = false;
     }, 500);
 
@@ -854,7 +1079,6 @@ function CreateDeviceTrigger(whichone) {    //TargetDeviceTrigger
         if (!TargetSwitchingInProgress) {
             SetLockStates(whichone, -1);
         };
-
     });
 }
 
@@ -864,22 +1088,34 @@ function CreateTrigger() {
     // Template Trigger
     for (let x = 0; x < Dps.length; x++) { //Alle Template Dps durchgehen und Trigger setzen
         on(praefix + "Template." + Dps[x], function (dp) {
-            //log("SwitchingInProgress =" + SwitchingInProgress)
-            if (!SwitchingInProgress) {
+            //if (logging) log("SwitchingInProgress =" + SwitchingInProgress)
+            MyTimerTemplate[x] = dp.state.val;
+
+            if (!SwitchingInProgress) { //Anzeige aktivieren das Werte geändert wurden
                 SwitchEditMode(ChoosenTimer, true);
             };
 
             if (x == 4 && getState(praefix + "Template." + Dps[5]).val != "time") { //AstroShift geändert
-                log("AstroShift geändert")
-                setState(praefix + "Template." + Dps[3], DetermineChoosenAstroTime(getState(praefix + "Template." + Dps[5]).val, false, dp.state.val)); //Zu gewählter Astrofunktion passende Zeit anzeigen
+                if (logging) log("AstroShift edited");
+                setState(praefix + "Template." + Dps[3], DetermineChoosenAstroTime(getState(praefix + "Template." + Dps[5]).val, DetermineNextActiveAstroDay(-1, false)[1], dp.state.val)); //Neuberechnete Zeit im Template anzeigen
+            };
 
-            }
             if (x == 5 && dp.state.val != "time") { //TimerChoice geändert und Astro gewählt
-                log("Astro gewählt")
-                setState(praefix + "Template." + Dps[3], DetermineChoosenAstroTime(dp.state.val, false, getState(praefix + "Template." + Dps[4]).val)); //Zu gewählter Astrofunktion passende Zeit anzeigen
+                if (logging) log("Astro choosen");
+                setState(praefix + "Template." + Dps[3], DetermineChoosenAstroTime(dp.state.val, DetermineNextActiveAstroDay(-1, false)[1], getState(praefix + "Template." + Dps[4]).val)); //Zu gewählter Astrofunktion passende Zeit anzeigen
+            };
 
-            }
-            else if (x == 14) { //OnlyIfPresence
+            if (x == 13) { //Änderung TimerTarget
+                if (logging) log("Template TimerTarget changed, typeof=" + typeof dp.state.val + " Wert=" + dp.state.val);
+                if (typeof dp.state.val != "undefined" && dp.state.val != "") {
+                    MyTimerTemplate[17] = TargetNames[Targets.indexOf(dp.state.val)]; //Smartname ermitteln und setzen
+                    setState(praefix + "Template." + Dps[17], MyTimerTemplate[17]); //Smartname schreiben
+                };
+                //log("MyTimerTemplate[17]=" + MyTimerTemplate[17])
+            };
+
+
+            if (x == 14) { //OnlyIfPresence - Block verhinder dass sowohl bei Anwesenheit als auch bei Abwesenheit abgewählt werden können was zu "nie" führen würde
                 if (!dp.state.val && !getState(praefix + "Template." + Dps[15]).val) {
                     setState(praefix + "Template." + Dps[15], true);
                 };
@@ -887,6 +1123,15 @@ function CreateTrigger() {
             else if (x == 15) { //OnlyIfNoPresence
                 if (!dp.state.val && !getState(praefix + "Template." + Dps[14]).val) {
                     setState(praefix + "Template." + Dps[14], true);
+                };
+            };
+
+            if (x == 6 || x == 7 || x == 8 || x == 9 || x == 10 || x == 11 || x == 12) { //Wenn ein Wochentag geändert wurde 
+                if (MyTimerTemplate[5] != "time") { //und Astro aktiv ist
+                    if (logging) log("Astro choosen and weekday changed");
+                    //Astrozeit neuberechnen und eintragen
+                    // Nächsten aktiven Tag ermitteln und in der nächsten Zeile die Zeit dafür berechnen
+                    setState(praefix + "Template." + Dps[3], DetermineChoosenAstroTime(MyTimerTemplate[5], DetermineNextActiveAstroDay(-1, false)[1], MyTimerTemplate[4])); //Zu gewählter Astrofunktion passende Zeit anzeigen unter Berücksichtigung welcher Tag der nächste aktive ist
                 };
             };
         });
@@ -901,7 +1146,7 @@ function CreateTrigger() {
         setTimeout(function () {
             SwitchingInProgress = false //Steuervariable nach Zeit x zurücksetzen
         }, 500);
-        if (logging) log("Timertemplate geändert auf " + dp.state.val);
+        if (logging) log("Timertemplate changed to " + dp.state.val);
     });
 
     on(praefix + "SaveEdit", function (dp) { //Bei Änderung  SaveEdit (Save Button in Vis)
@@ -926,7 +1171,6 @@ function CreateTrigger() {
     });
 
     on(praefix + "DelTimer", function (dp) { //Bei Änderung DeleteTimer (Button in Vis)
-
         if (dp.state.val) {
             DeletionInProgress = true
             setTimeout(function () {
