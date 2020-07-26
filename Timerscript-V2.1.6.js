@@ -1,4 +1,4 @@
-const SkriptVersion = "2.1.5"; //Stand 19.07.2020 - Github: https://github.com/Pittini/iobroker-Timer Forum: https://forum.iobroker.net/topic/33228/vorlage-flexibles-timerskript-vis
+const SkriptVersion = "2.1.6"; //Stand 26.07.2020 - Github: https://github.com/Pittini/iobroker-Timer Forum: https://forum.iobroker.net/topic/33228/vorlage-flexibles-timerskript-vis
 
 //Timerskript
 
@@ -430,10 +430,13 @@ function init() {
             if (Funktion == WelcheFunktionVerwenden) { //Wenn Function ist z.B. TimerTarget
                 for (let y in members) { // Loop über alle TimerTarget Members
                     Targets[y] = members[y];
+                    log("GetParentId(Targets[y])="+GetParentId(Targets[y]))
                     TargetNames[y] = getObject(GetParentId(Targets[y]), "common").common.name;
+                    if (typeof getObject(GetParentId(Targets[y]), "common").common.name=='object') TargetNames[y] =  getObject(GetParentId(Targets[y]), "common").common.name.de
+                    
                 };
-                //log(Targets.length + " Targets found - Targets are: " + Targets);
-                //log("Names are: " + TargetNames);
+                log(Targets.length + " Targets found - Targets are: " + Targets);
+                log("Names are: " + TargetNames);
 
                 setState(praefix + "TimerTargetValues", Targets.join(";")); //Datenpunkt für Vis Listenfeld füllen
                 setState(praefix + "TimerTargetText", TargetNames.join(";")); //Datenpunkt für Vis Listenfeld füllen

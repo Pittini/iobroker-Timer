@@ -19,7 +19,7 @@
 ### Vorraussetzungen: Den zu schaltenden Geräten/Datenpunkten muss eine Funktion, z.B. "TimerTarget" zugewiesen sein.   
 ### **<span style="color:red">Aber nur für den Datenpunkt, nicht den gesamten Channel!!!</span>**  
 
-![timertut1a.png](/admin/timertut1a.png) 
+![timertut1.png](/admin/timertut1.png) 
 
 # Installation
 1. Wenn noch nicht geschehen, allen gewünschten Zieldatenpunkten eine Funktion zuweisen. Die Funktion muss vorher in den Aufzählungen hinzugefügt werden und könnte z.B. "TimerTarget" lauten. Soll ein anderer Begriff verwendet werden, muss dies dann auch im Script geändert werden. **Nach der Zuweisung, bzw. dem anlegen neuer Aufzählungspunkte ist es empfehlenswert die JS Instanz neu zu starten da diese bei Aufzählungsänderungen gerne mal "zickt" was dann zu Skriptfehlern führt**.
@@ -79,6 +79,8 @@ Das wars, viel Spaß.
 
 
 ## Changelog
+### V2.1.6 (26.07.2020)
+* Fix: Problem bei Verwendung des Alias.0 Ordners (keine Namensanzeige) behoben.
 ### V2.1.5 (19.07.2020)
 * Add: Option "Wert senden" zu Aktionen, sowie entsprechendes Eingabefeld und Spalte in der Tabelle hinzugefügt.
 ### V2.1.4 (30.06.2020)
