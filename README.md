@@ -79,8 +79,9 @@ Das wars, viel Spaß.
 
 
 ## Changelog
-### V2.1.6 (26.07.2020)
+### V2.1.7 (26.07.2020)
 * Fix: Problem bei Verwendung des Alias.0 Ordners (keine Namensanzeige) behoben.
+* Add: Möglichkeit in den Einstellungen hinzugefügt statt Channelnamen, Id-Namen zu verwenden.
 ### V2.1.5 (19.07.2020)
 * Add: Option "Wert senden" zu Aktionen, sowie entsprechendes Eingabefeld und Spalte in der Tabelle hinzugefügt.
 ### V2.1.4 (30.06.2020)
