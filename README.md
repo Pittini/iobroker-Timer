@@ -79,6 +79,8 @@ Das wars, viel Spaß.
 
 
 ## Changelog
+### V2.1.8 (22.09.2020)
+* Fix: Problem beim löschen von Timern behoben. (fastfood)
 ### V2.1.7 (26.07.2020)
 * Fix: Problem bei Verwendung des Alias.0 Ordners (keine Namensanzeige) behoben.
 * Add: Möglichkeit in den Einstellungen hinzugefügt statt Channelnamen, Id-Namen zu verwenden.
