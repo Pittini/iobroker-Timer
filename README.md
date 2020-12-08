@@ -79,6 +79,8 @@ Das wars, viel Spaß.
 
 
 ## Changelog
+### V2.1.9 (08.12.2020)
+* Fix: Beim setzen von Werten wird nun der Datentyp des Zieldatenpunktes vorab geprüft und der Wert nötigenfalls entsprechend konvertiert. Issue: https://github.com/Pittini/iobroker-Timer/issues/6
 ### V2.1.8 (22.09.2020)
 * Fix: Problem beim löschen von Timern behoben. (fastfood)
 ### V2.1.7 (26.07.2020)
