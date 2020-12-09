@@ -3,7 +3,7 @@ const SkriptVersion = "2.1.9"; //Stand 08.12.2020 - Github: https://github.com/P
 //Timerskript
 
 //Wichtige Einstellungen
-const logging = false; //Logmeldungen an/aus
+const logging = true; //Logmeldungen an/aus
 const praefix = "javascript.0.Timer."; //Grundpfad
 const PresenceDp = "radar2.0._nHere"; //Pfad zum Anwesenheitsdatenpunkt - Leer lassen wenn nicht vorhanden!
 const WelcheFunktionVerwenden = "TimerTarget";
@@ -668,10 +668,11 @@ function DoAction(whichone) { //Hier wird geschaltet, Zentralfunktion
             TargetSwitchingInProgress = true;
             let OldState = getState(MyTimer[whichone][13]).val;
             let StateType = typeof OldState;
+            if (logging) log("StateType from " + MyTimer[whichone][13] + " = " + StateType + " value=" + OldState)
             switch (MyTimer[whichone][1]) {
                 case 0://Wenns die Rolle Ausschalter ist
                     if (StateType == "string") {
-                        setState(MyTimer[whichone][13], String(false));//Switchtarget deaktivieren
+                        setState(MyTimer[whichone][13], "false");//Switchtarget deaktivieren
                     } else {
                         setState(MyTimer[whichone][13], false);//Switchtarget deaktivieren
                     };
@@ -681,31 +682,30 @@ function DoAction(whichone) { //Hier wird geschaltet, Zentralfunktion
                     break;
                 case 1:// Wenn die Rolle Anschalter ist
                     if (StateType == "string") {
-                        setState(MyTimer[whichone][13], String(true));//Switchtarget deaktivieren
+                        setState(MyTimer[whichone][13], "true");//Switchtarget deaktivieren
                     } else {
                         setState(MyTimer[whichone][13], true);//Switchtarget deaktivieren
                     };
-                    setState(MyTimer[whichone][13], true); //Switchtarget aktivieren
                     MyTimer[whichone][(Dps.length + 0)] = "on";
                     log("Timer " + (whichone + 1) + ", " + GetDeviceName(GetParentId(MyTimer[whichone][13])) + ", switched on");
                     if (MyTimer[whichone][16]) Meldung("Timer " + (whichone + 1) + ", " + GetDeviceName(GetParentId(MyTimer[whichone][13])) + ", hat eingeschaltet");
                     break;
                 case 2:// Wenn die Rolle Umschalter ist
                     if (OldState) { //Aktuellen Targetstatus lesen
-                if(StateType=="string"){
-                    setState(MyTimer[whichone][13], String(false));//Switchtarget deaktivieren
-                } else{
-                    setState(MyTimer[whichone][13], false);//Switchtarget deaktivieren
-                };
+                        if (StateType == "string") {
+                            setState(MyTimer[whichone][13], "false");//Switchtarget deaktivieren
+                        } else {
+                            setState(MyTimer[whichone][13], false);//Switchtarget deaktivieren
+                        };
                         MyTimer[whichone][(Dps.length + 0)] = "off";
                         log("Timer " + (whichone + 1) + ", " + GetDeviceName(GetParentId(MyTimer[whichone][13])) + ", changed over to off");
                         if (MyTimer[whichone][16]) Meldung("Timer " + (whichone + 1) + ", " + GetDeviceName(GetParentId(MyTimer[whichone][13])) + ", hat (um)-ausgeschaltet");
                     } else {
-                if(StateType=="string"){
-                    setState(MyTimer[whichone][13], String(true));//Switchtarget deaktivieren
-                } else{
-                    setState(MyTimer[whichone][13], true);//Switchtarget deaktivieren
-                };
+                        if (StateType == "string") {
+                            setState(MyTimer[whichone][13], "true");//Switchtarget deaktivieren
+                        } else {
+                            setState(MyTimer[whichone][13], true);//Switchtarget deaktivieren
+                        };
                         MyTimer[whichone][(Dps.length + 0)] = "on";
                         log("Timer " + (whichone + 1) + ", " + GetDeviceName(GetParentId(MyTimer[whichone][13])) + ", changed over to on");
                         if (MyTimer[whichone][16]) Meldung("Timer " + (whichone + 1) + ", " + GetDeviceName(GetParentId(MyTimer[whichone][13])) + ", hat (um)-angeschaltet");
