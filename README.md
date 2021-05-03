@@ -79,6 +79,8 @@ Das wars, viel Spaß.
 
 
 ## Changelog
+### V2.1.10 (03.05.2021)
+* Fix: Fehlermeldung "...has been written without ack-flag" bei Verwendung des Js Controllers 3.3.x oder höher. Issue: https://github.com/Pittini/iobroker-Timer/issues/8
 ### V2.1.9 (08.12.2020)
 * Fix: Beim setzen von Werten wird nun der Datentyp des Zieldatenpunktes vorab geprüft und der Wert nötigenfalls entsprechend konvertiert. Issue: https://github.com/Pittini/iobroker-Timer/issues/6
 ### V2.1.8 (22.09.2020)
