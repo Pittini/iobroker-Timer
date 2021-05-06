@@ -1,9 +1,9 @@
-const SkriptVersion = "2.1.10"; //Stand 03.05.2021 - Github: https://github.com/Pittini/iobroker-Timer Forum: https://forum.iobroker.net/topic/33228/vorlage-flexibles-timerskript-vis
+const SkriptVersion = "2.1.9"; //Stand 08.12.2020 - Github: https://github.com/Pittini/iobroker-Timer Forum: https://forum.iobroker.net/topic/33228/vorlage-flexibles-timerskript-vis
 
 //Timerskript
 
 //Wichtige Einstellungen
-const logging = false; //Logmeldungen an/aus
+const logging = true; //Logmeldungen an/aus
 const praefix = "javascript.0.Timer."; //Grundpfad
 const PresenceDp = "radar2.0._nHere"; //Pfad zum Anwesenheitsdatenpunkt - Leer lassen wenn nicht vorhanden!
 const WelcheFunktionVerwenden = "TimerTarget";
@@ -391,7 +391,7 @@ function CreateTimerTargetsNameList() { //Ermittelt Channelnamen, oder Smartname
                 if (MyTimer[y][17] != NewTargetNames[x]) { //Aktueller Smartname entspricht nicht der Liste
                     log("Smartname synchronisiert x=" + x + " y=" + y + " AlterSmartname=" + MyTimer[y][17] + " neuer Smartname=" + NewTargetNames[x])
                     MyTimer[y][17] = NewTargetNames[x];
-                    setState(praefix + y + ".SwitchTargetSmartName", MyTimer[y][17],true);
+                    setState(praefix + y + ".SwitchTargetSmartName", MyTimer[y][17]);
                 };
             };
         };
@@ -672,9 +672,9 @@ function DoAction(whichone) { //Hier wird geschaltet, Zentralfunktion
             switch (MyTimer[whichone][1]) {
                 case 0://Wenns die Rolle Ausschalter ist
                     if (StateType == "string") {
-                        setState(MyTimer[whichone][13], "false",true);//Switchtarget deaktivieren
+                        setState(MyTimer[whichone][13], "false");//Switchtarget deaktivieren
                     } else {
-                        setState(MyTimer[whichone][13], false,true);//Switchtarget deaktivieren
+                        setState(MyTimer[whichone][13], false);//Switchtarget deaktivieren
                     };
                     MyTimer[whichone][(Dps.length + 0)] = "off";
                     log("Timer " + (whichone + 1) + ", " + GetDeviceName(GetParentId(MyTimer[whichone][13])) + ", switched off");
@@ -682,9 +682,9 @@ function DoAction(whichone) { //Hier wird geschaltet, Zentralfunktion
                     break;
                 case 1:// Wenn die Rolle Anschalter ist
                     if (StateType == "string") {
-                        setState(MyTimer[whichone][13], "true",true);//Switchtarget deaktivieren
+                        setState(MyTimer[whichone][13], "true");//Switchtarget deaktivieren
                     } else {
-                        setState(MyTimer[whichone][13], true,true);//Switchtarget deaktivieren
+                        setState(MyTimer[whichone][13], true);//Switchtarget deaktivieren
                     };
                     MyTimer[whichone][(Dps.length + 0)] = "on";
                     log("Timer " + (whichone + 1) + ", " + GetDeviceName(GetParentId(MyTimer[whichone][13])) + ", switched on");
@@ -693,18 +693,18 @@ function DoAction(whichone) { //Hier wird geschaltet, Zentralfunktion
                 case 2:// Wenn die Rolle Umschalter ist
                     if (OldState) { //Aktuellen Targetstatus lesen
                         if (StateType == "string") {
-                            setState(MyTimer[whichone][13], "false",true);//Switchtarget deaktivieren
+                            setState(MyTimer[whichone][13], "false");//Switchtarget deaktivieren
                         } else {
-                            setState(MyTimer[whichone][13], false,true);//Switchtarget deaktivieren
+                            setState(MyTimer[whichone][13], false);//Switchtarget deaktivieren
                         };
                         MyTimer[whichone][(Dps.length + 0)] = "off";
                         log("Timer " + (whichone + 1) + ", " + GetDeviceName(GetParentId(MyTimer[whichone][13])) + ", changed over to off");
                         if (MyTimer[whichone][16]) Meldung("Timer " + (whichone + 1) + ", " + GetDeviceName(GetParentId(MyTimer[whichone][13])) + ", hat (um)-ausgeschaltet");
                     } else {
                         if (StateType == "string") {
-                            setState(MyTimer[whichone][13], "true",true);//Switchtarget deaktivieren
+                            setState(MyTimer[whichone][13], "true");//Switchtarget deaktivieren
                         } else {
-                            setState(MyTimer[whichone][13], true,true);//Switchtarget deaktivieren
+                            setState(MyTimer[whichone][13], true);//Switchtarget deaktivieren
                         };
                         MyTimer[whichone][(Dps.length + 0)] = "on";
                         log("Timer " + (whichone + 1) + ", " + GetDeviceName(GetParentId(MyTimer[whichone][13])) + ", changed over to on");
@@ -963,7 +963,7 @@ function WriteToTimer(whichone) { //Schreibt Daten vom Template in bestimmten Ti
         } else {
             ActiveTimerCount--;
         };
-        setState(praefix + "ActiveTimerCount", ActiveTimerCount,true); //Zähler der aktiven Timer in Dp schreiben
+        setState(praefix + "ActiveTimerCount", ActiveTimerCount); //Zähler der aktiven Timer in Dp schreiben
     };
 
     if (MyTimer[whichone][13] != "") { //Sobald ein Ziel eingetragen von disabled auf idle stellen
@@ -985,14 +985,14 @@ function WriteToTimer(whichone) { //Schreibt Daten vom Template in bestimmten Ti
 function AddNewTimer() {
     if (logging) log("Reaching AddNewTimer");
     TimerCount++;
-    setState(praefix + "TimerCount", TimerCount,true);
+    setState(praefix + "TimerCount", TimerCount);
     if (logging) log("Timercount=" + TimerCount);
     let x = TimerCount - 1;
     CreateTimer(x)
     CreateTimerCountList();//Timer Value List aktualisieren
 
     setTimeout(function () { //Warten bis neuer Timer angelegt
-        setState(praefix + "SwitchToTimer", TimerCount - 1,true); //Dann zu neuem Timer wechseln
+        setState(praefix + "SwitchToTimer", TimerCount - 1); //Dann zu neuem Timer wechseln
     }, 50);
 }
 
@@ -1012,7 +1012,7 @@ function DeleteTimer(whichone = ChoosenTimer) {
 
     if (MyTimer[whichone][0]) { //Wenn Timer aktiv war ActiveTimercount Variable und Dp aktualisieren
         ActiveTimerCount--;
-        setState(praefix + "ActiveTimerCount", ActiveTimerCount,true); //Zähler der aktiven Timer in Dp schreiben
+        setState(praefix + "ActiveTimerCount", ActiveTimerCount); //Zähler der aktiven Timer in Dp schreiben
     };
 
     if (MyTimer[whichone][13] != "" && NewArray.indexOf(MyTimer[whichone][13]) == -1) {//Subscription löschen wenn ein Ziel vorhanden war und kein weiterer Timer dieses Ziel verwendet
@@ -1032,7 +1032,7 @@ function DeleteTimer(whichone = ChoosenTimer) {
             setState(praefix + x + "." + Dps[y], MyTimer[x][y],true);
         };
     };
-    setState(praefix + "SwitchToTimer", TimerCount - 1,true); //Dann zu vorherigem Timer wechseln
+    setState(praefix + "SwitchToTimer", TimerCount - 1); //Dann zu vorherigem Timer wechseln
     if (logging) log("Now Delete last channel=" + praefix + (TimerCount));
     deleteObject(praefix + (TimerCount), true); //Löscht gesamten Channel
 
@@ -1044,19 +1044,19 @@ function WriteToTemplate(whichone) { //Schreibt Werte von bestimmten Timer ins T
     if (logging) log("Typeof MyTimer[" + whichone + "]=" + typeof MyTimer[whichone])
     if (typeof MyTimer[whichone] == "undefined") { //Wenn bei neuem Timer Eintrag noch nicht gesetzt (async Problem)
         for (let y = 0; y < Dps.length; y++) {
-            setState(praefix + "Template" + "." + Dps[y], DpDefaults[y],true); //Defaults setzen
+            setState(praefix + "Template" + "." + Dps[y], DpDefaults[y]); //Defaults setzen
             MyTimerTemplate[y] = DpDefaults[y];
         };
     }
     else {
         for (let y = 0; y < Dps.length; y++) {
-            setState(praefix + "Template" + "." + Dps[y], MyTimer[whichone][y],true); //Normale Werte aus Array setzen
+            setState(praefix + "Template" + "." + Dps[y], MyTimer[whichone][y]); //Normale Werte aus Array setzen
             MyTimerTemplate[y] = MyTimer[whichone][y];
             if (MyTimerTemplate[5] != "time") { //und Astro aktiv ist
                 if (logging) log("Astro choosen and weekday changed");
                 //Astrozeit neuberechnen und eintragen
                 // Nächsten aktiven Tag ermitteln und in der nächsten Zeile die Zeit dafür berechnen
-                setState(praefix + "Template." + Dps[3], DetermineChoosenAstroTime(MyTimerTemplate[5], DetermineNextActiveAstroDay(-1, false)[1], MyTimerTemplate[4]),true); //Zu gewählter Astrofunktion passende Zeit anzeigen unter Berücksichtigung welcher Tag der nächste aktive ist
+                setState(praefix + "Template." + Dps[3], DetermineChoosenAstroTime(MyTimerTemplate[5], DetermineNextActiveAstroDay(-1, false)[1], MyTimerTemplate[4])); //Zu gewählter Astrofunktion passende Zeit anzeigen unter Berücksichtigung welcher Tag der nächste aktive ist
             };
 
         };
@@ -1124,19 +1124,19 @@ function CreateTrigger() {
 
             if (x == 4 && getState(praefix + "Template." + Dps[5]).val != "time") { //AstroShift geändert
                 if (logging) log("AstroShift edited");
-                setState(praefix + "Template." + Dps[3], DetermineChoosenAstroTime(getState(praefix + "Template." + Dps[5]).val, DetermineNextActiveAstroDay(-1, false)[1], dp.state.val),true); //Neuberechnete Zeit im Template anzeigen
+                setState(praefix + "Template." + Dps[3], DetermineChoosenAstroTime(getState(praefix + "Template." + Dps[5]).val, DetermineNextActiveAstroDay(-1, false)[1], dp.state.val)); //Neuberechnete Zeit im Template anzeigen
             };
 
             if (x == 5 && dp.state.val != "time" && typeof dp.state.val != "undefined") { //TimerChoice geändert und Astro gewählt
                 if (logging) log("Astro choosen");
-                setState(praefix + "Template." + Dps[3], DetermineChoosenAstroTime(dp.state.val, DetermineNextActiveAstroDay(-1, false)[1], getState(praefix + "Template." + Dps[4]).val),true); //Zu gewählter Astrofunktion passende Zeit anzeigen
+                setState(praefix + "Template." + Dps[3], DetermineChoosenAstroTime(dp.state.val, DetermineNextActiveAstroDay(-1, false)[1], getState(praefix + "Template." + Dps[4]).val)); //Zu gewählter Astrofunktion passende Zeit anzeigen
             };
 
             if (x == 13) { //Änderung TimerTarget
                 if (logging) log("Template TimerTarget changed, typeof=" + typeof dp.state.val + " Wert=" + dp.state.val);
                 if (typeof dp.state.val != "undefined" && dp.state.val != "") {
                     MyTimerTemplate[17] = TargetNames[Targets.indexOf(dp.state.val)]; //Smartname ermitteln und setzen
-                    setState(praefix + "Template." + Dps[17], MyTimerTemplate[17],true); //Smartname schreiben
+                    setState(praefix + "Template." + Dps[17], MyTimerTemplate[17]); //Smartname schreiben
                 };
                 //log("MyTimerTemplate[17]=" + MyTimerTemplate[17])
             };
@@ -1158,7 +1158,7 @@ function CreateTrigger() {
                     if (logging) log("Astro choosen and weekday changed");
                     //Astrozeit neuberechnen und eintragen
                     // Nächsten aktiven Tag ermitteln und in der nächsten Zeile die Zeit dafür berechnen
-                    setState(praefix + "Template." + Dps[3], DetermineChoosenAstroTime(MyTimerTemplate[5], DetermineNextActiveAstroDay(-1, false)[1], MyTimerTemplate[4]),true); //Zu gewählter Astrofunktion passende Zeit anzeigen unter Berücksichtigung welcher Tag der nächste aktive ist
+                    setState(praefix + "Template." + Dps[3], DetermineChoosenAstroTime(MyTimerTemplate[5], DetermineNextActiveAstroDay(-1, false)[1], MyTimerTemplate[4])); //Zu gewählter Astrofunktion passende Zeit anzeigen unter Berücksichtigung welcher Tag der nächste aktive ist
                 };
             };
         });
@@ -1181,7 +1181,7 @@ function CreateTrigger() {
             WriteToTimer(ChoosenTimer);
             setTimeout(function () {
                 if (logging) log("Settings saved")
-                setState(praefix + "SaveEdit", false,true); //State wieder zurücksetzen nach einer Sek. (erzeugt kurze Farbbestätigung in Vis) um erneut definiert auf true triggern zu können
+                setState(praefix + "SaveEdit", false); //State wieder zurücksetzen nach einer Sek. (erzeugt kurze Farbbestätigung in Vis) um erneut definiert auf true triggern zu können
             }, 1000);
         };
     });
@@ -1192,7 +1192,7 @@ function CreateTrigger() {
         if (dp.state.val) {
             AddNewTimer();
             setTimeout(function () {
-                setState(praefix + "AddTimer", false,true);
+                setState(praefix + "AddTimer", false);
             }, 500);
         };
     });
@@ -1202,7 +1202,7 @@ function CreateTrigger() {
             DeletionInProgress = true
             setTimeout(function () {
                 DeletionInProgress = false
-                setState(praefix + "DelTimer", false,true);
+                setState(praefix + "DelTimer", false);
             }, 3000);
         }
         else if (!dp.state.val && DeletionInProgress) {
