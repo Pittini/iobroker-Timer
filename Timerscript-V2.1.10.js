@@ -1,4 +1,4 @@
-const SkriptVersion = "2.1.9"; //Stand 08.12.2020 - Github: https://github.com/Pittini/iobroker-Timer Forum: https://forum.iobroker.net/topic/33228/vorlage-flexibles-timerskript-vis
+const SkriptVersion = "2.1.10"; //Stand 08.05.2021 - Github: https://github.com/Pittini/iobroker-Timer Forum: https://forum.iobroker.net/topic/33228/vorlage-flexibles-timerskript-vis
 
 //Timerskript
 
