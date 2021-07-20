@@ -13,6 +13,7 @@
 6. Timer hat Astrofunktion, bei Auswahl einer Astrofunktion kann hier zusätzlich ein +- Offset angegeben werden.
 7. Timer wird komplett via Vis gesteuert, keinerlei Skriptänderungen nötig um Timer anzulegen, zu löschen oder zu ändern.
 8. Vis zeigt Status der Schaltziele durch Farbwechsel.
+9. Es kann eine Regel festgelegt werden um Schaltungen zu verhindern, z.B. Bewässerung nur anschalten wenn Bodenfeuchte einen gewissen Wert unterschreitet etc. Hierfür kann ein Datenpunkt gegen einen festen Wert, aber auch gegen einen anderen Datenpunkt verglichen werden.
 
 
 ## WICHTIG!!!
@@ -49,17 +50,19 @@ Solltet Ihr keinen Anwesenheitsdatenpunkt eingetragen haben, so ist dieser Butto
 Solltet Ihr keinen Anwesenheitsdatenpunkt eingetragen haben, so ist dieser Button, sowie die zugehörige Spalte in der Übersichtstabelle nicht sichtbar. Skriptintern wird die Anwesenheit auf true gesetzt.
 11. **Der Button "Briefumschlag"** - Hiermit kannst Du festlegen ob Du über die Aktivitäten dieses Timers benachrichtigt werden möchtest oder nicht. Default ist: benachrichtigen. Setzt voraus dass eine Benachrichtigungvariante grundsätzlich in den Skripteinstellungen aktiviert ist.
 
+12. **Der Bereich "Regel"** - Hier könnt Ihr einen Vergleich angeben, ist dieser "wahr" wird wie eingestellt geschaltet, ist dieser "falsch" wird nicht geschaltet. Im ersten Feld wird eine ObjektId erwartet, im Auswahlfeld stellt Ihr den Vergleichsoperator ein und im dritten Feld entweder einen Wert oder eine ObjektId.
+
 Aus Sicherheits/Fehlbedienungs-gründen und um Schreibzugriffe zu minimieren werden geänderte Einstellungen erst gespeichert wenn Ihr dies explizit veranlasst. Hierzu dient:  
 
-12.  **Der Button "Diskette"**  - Durch Klick auf diesen werden die getroffenen Einstellungen gespeichert. Dieses wird optisch bestätigt durch kurzen Farbwechsel zu grün und zurück zu grau.
+13.  **Der Button "Diskette"**  - Durch Klick auf diesen werden die getroffenen Einstellungen gespeichert. Dieses wird optisch bestätigt durch kurzen Farbwechsel zu grün und zurück zu grau.
 
 Um einen neuen Timereintrag anzulegen verwendest Du: 
 
-13.  **Den Button "+"** - Ein klick auf diesen Button erzeugt einen neuen Eintrag und setzt den Fokus auf diesen so das Du sofort im Editbereich die gewünschten Werte eintragen kannst. Speichern nicht vergessen!
+14.  **Den Button "+"** - Ein klick auf diesen Button erzeugt einen neuen Eintrag und setzt den Fokus auf diesen so das Du sofort im Editbereich die gewünschten Werte eintragen kannst. Speichern nicht vergessen!
 
 Zuguterletzt gibt es noch die Möglichkeit den Timer mit dem aktuellen Fokus zu löschen, hierzu dient:
 
-14. **Der Button "Papierkorb"** - Um versehentliches Löschen zu erschweren hat dieser Button eine **Sicherheitsabfrage**. Der erste Klick auf den Button "Papierkorb" läßt dessen Farbe zu rot wechseln, das Symbol wandelt sich zu einem Fragezeichen. Erst ein weiterer Klick, nunmehr auf das Fragezeichen, innerhalb 3 Sekunden, löscht den Eintrag tatsächlich und unwiederbringlich. Läßt Du die 3 Sekunden ohne Klick verstreichen, wandelt sich der Button zurück zum Papierkorb, der Löschmodus wird abgebrochen. 
+15. **Der Button "Papierkorb"** - Um versehentliches Löschen zu erschweren hat dieser Button eine **Sicherheitsabfrage**. Der erste Klick auf den Button "Papierkorb" läßt dessen Farbe zu rot wechseln, das Symbol wandelt sich zu einem Fragezeichen. Erst ein weiterer Klick, nunmehr auf das Fragezeichen, innerhalb 3 Sekunden, löscht den Eintrag tatsächlich und unwiederbringlich. Läßt Du die 3 Sekunden ohne Klick verstreichen, wandelt sich der Button zurück zum Papierkorb, der Löschmodus wird abgebrochen. 
 
 ### Farben der Übersichtstabelle
 **Weisser** Rahmen zeigt Dir den Eintrag mit aktuellem Fokus. Änderungen im Editbereich würden sich auf genau diese Zeile auswirken. Sobald Du im Editbereich eine erste Änderung vornimmst, wandelt sich der Hintergrund in:
@@ -79,6 +82,8 @@ Das wars, viel Spaß.
 
 
 ## Changelog
+### V2.2.0 (18.07.2021)
+* Add: Es kann nun eine Regel festgelegt werden um Schaltungen zu verhindern, z.B. Bewässerung nur anschalten wenn Bodenfeuchte einen gewissen Wert unterschreitet etc. Hierfür kann ein Datenpunkt gegen einen festen Wert, aber auch gegen einen anderen Datenpunkt verglichen werden. 
 ### V2.1.10 (03.05.2021)
 * Fix: Fehlermeldung "...has been written without ack-flag" bei Verwendung des Js Controllers 3.3.x oder höher. Issue: https://github.com/Pittini/iobroker-Timer/issues/8
 ### V2.1.9 (08.12.2020)

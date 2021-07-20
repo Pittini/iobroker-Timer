@@ -1,9 +1,9 @@
-const SkriptVersion = "2.1.8"; //Stand 19.09.2020 - Github: https://github.com/Pittini/iobroker-Timer Forum: https://forum.iobroker.net/topic/33228/vorlage-flexibles-timerskript-vis
+const SkriptVersion = "2.2.0"; //Stand 18.07.2021 - Github: https://github.com/Pittini/iobroker-Timer Forum: https://forum.iobroker.net/topic/33228/vorlage-flexibles-timerskript-vis
 
 //Timerskript
 
 //Wichtige Einstellungen
-const logging = false; //Logmeldungen an/aus
+const logging = true; //Logmeldungen an/aus
 const praefix = "javascript.0.Timer."; //Grundpfad
 const PresenceDp = "radar2.0._nHere"; //Pfad zum Anwesenheitsdatenpunkt - Leer lassen wenn nicht vorhanden!
 const WelcheFunktionVerwenden = "TimerTarget";
@@ -15,7 +15,7 @@ const UseAlexa = false; // Sollen Nachrichten via Alexa ausgegeben werden?
 const AlexaId = ""; // Die Alexa Seriennummer.
 const UseMail = false; //Nachricht via Mail versenden?
 const UseSay = false; // Sollen Nachrichten via Say ausgegeben werden? Autorenfunktion, muß deaktiviert werden.
-const UseEventLog = true; // Sollen Nachrichten ins Eventlog geschreiben werden? Autorenfunktion, muß deaktiviert werden.
+const UseEventLog = false; // Sollen Nachrichten ins Eventlog geschreiben werden? Autorenfunktion, muß deaktiviert werden.
 
 //Tabellen Einstellungen
 const TblOnBgColor = "#4caf50"; //Hintergrundfarbe für Timer hat angeschaltet
@@ -42,6 +42,7 @@ const TblShowTimerDaysCol = true; //Tabellenspalte mit aktiven Tagen anzeigen?
 const TblShowTimerIfPresenceCol = true; //Tabellenspalte Schaltung nur bei Anwesenheit ausgeben?
 const TblShowTimerIfNoPresenceCol = true; //Tabellenspalte Schaltung nur bei Abwesenheit ausgeben?
 const TblShowTimerMessageCol = true; //Tabellenspalte für separate Benachrichtigungseinstellung ausgeben?
+const TblShowTimerRuleCol = true; //Tabellenspalte für Rules ausgeben?
 const ImgInvert = 0; // Bildfarben invertieren? Erlaubte Werte von 0 bis 1
 const TblLfdImg = "/icons-mfd-svg/time_timer.svg"; //Bild für "Timer aktiv"
 const TblActiveImg = "/icons-mfd-svg/control_on_off.svg"; //Bild für "Timer aktiv"
@@ -79,8 +80,8 @@ const ModeValues = ["time", "dawn", "sunrise", "sunriseEnd", "goldenHourEnd", "s
 const ModeText = ["Zeit", "Morgendämmerung", "Sonnenaufgang", "Ende Sonnenaufgang", "Ende Blaue Stunde", "Sonnenmittag", "Goldene Stunde", "Beginn Sonnenuntergang", "Sonnenuntergang", "Abenddämmerung", "Nacht", "Nadir", "Nachtende"]; //Array für Astrobezeichnungen  in Deutsch
 const AktionValues = [0, 1, 2, 3];
 const AktionText = ["Ausschalten", "Einschalten", "Umschalten", "Wert senden"];
-const Dps = ["Aktiv", "Rolle", "TimerTimestamp", "TimerAstroTimestamp", "TimerAstroShift", "TimerChoice", "TimerSonntag", "TimerMontag", "TimerDienstag", "TimerMittwoch", "TimerDonnerstag", "TimerFreitag", "TimerSamstag", "SwitchTarget", "OnlyIfPresence", "OnlyIfNoPresence", "ActivityMessage", "SwitchTargetSmartName", "SendValue"];
-const DpDefaults = [false, 1, "00:00:00", "00:00:00", 0, "time", true, true, true, true, true, true, true, "", true, true, true, "", "-"];
+const Dps = ["Aktiv", "Rolle", "TimerTimestamp", "TimerAstroTimestamp", "TimerAstroShift", "TimerChoice", "TimerSonntag", "TimerMontag", "TimerDienstag", "TimerMittwoch", "TimerDonnerstag", "TimerFreitag", "TimerSamstag", "SwitchTarget", "OnlyIfPresence", "OnlyIfNoPresence", "ActivityMessage", "SwitchTargetSmartName", "SendValue", "RuleVal1", "RuleOperator", "RuleVal2"];
+const DpDefaults = [false, 1, "00:00:00", "00:00:00", 0, "time", true, true, true, true, true, true, true, "", true, true, true, "", "-", "", "", ""];
 
 let MyTimer = []; //Datenarray aller Timer, darf nicht const sein weil bei Timerlöschung komplette Neuzuweisung erfolgt
 const MyTimerTemplate = [];
@@ -200,6 +201,12 @@ function PrepareDps() {
     DpCount++;
     States[DpCount] = { id: praefix + "Template" + ".SendValue", initial: DpDefaults[18], forceCreation: false, common: { read: true, write: true, name: "Zu sendender Wert", type: "string", def: DpDefaults[18] } };
     DpCount++;
+    States[DpCount] = { id: praefix + "Template" + ".RuleVal1", initial: DpDefaults[19], forceCreation: false, common: { read: true, write: true, name: "Vergleichswert1", type: "string", def: DpDefaults[19] } };
+    DpCount++;
+    States[DpCount] = { id: praefix + "Template" + ".RuleOperator", initial: DpDefaults[20], forceCreation: false, common: { read: true, write: true, name: "Zu sendender Wert", type: "string", def: DpDefaults[20] } };
+    DpCount++;
+    States[DpCount] = { id: praefix + "Template" + ".RuleVal2", initial: DpDefaults[21], forceCreation: false, common: { read: true, write: true, name: "Vergleichswert2", type: "string", def: DpDefaults[21] } };
+    DpCount++;
 
     //Alle States anlegen, Main aufrufen wenn fertig
     let numStates = States.length;
@@ -248,6 +255,12 @@ function CreateTimer(x) { //Erzeugt Timerchannel und Dps. Aufruf bei Start und A
     States[DpCount] = { id: praefix + x + ".SwitchTargetSmartName", initial: DpDefaults[17], forceCreation: false, common: { read: true, write: true, name: "Name für Ziel", type: "string", def: DpDefaults[17] } };
     DpCount++;
     States[DpCount] = { id: praefix + x + ".SendValue", initial: DpDefaults[18], forceCreation: false, common: { read: true, write: true, name: "Zu sendender Wert", type: "string", def: DpDefaults[18] } };
+    DpCount++;
+    States[DpCount] = { id: praefix + x + ".RuleVal1", initial: DpDefaults[19], forceCreation: false, common: { read: true, write: true, name: "Vergleichswert1", type: "string", def: DpDefaults[19] } };
+    DpCount++;
+    States[DpCount] = { id: praefix + x + ".RuleOperator", initial: DpDefaults[20], forceCreation: false, common: { read: true, write: true, name: "Zu sendender Wert", type: "string", def: DpDefaults[20] } };
+    DpCount++;
+    States[DpCount] = { id: praefix + x + ".RuleVal2", initial: DpDefaults[21], forceCreation: false, common: { read: true, write: true, name: "Vergleichswert2", type: "string", def: DpDefaults[21] } };
     DpCount++;
 
     //Alle States anlegen,  aufrufen wenn fertig
@@ -321,7 +334,7 @@ function FillTimerTemplateArray() { //Liest die gepeicherten Templatedaten ein
 function ConvertPresence(TempPresence = true) {//Wert vom Anwesenheitsdatenpunkt konvertieren falls Nummer, true als default. 
     if (logging) log("Reaching ConvertPresence. TempPresence=" + TempPresence)
     if (PresenceDp != "") {
-        setState(praefix + "PresenceFuncAvailable", true);  //Anwesenheitsfunktion vorhanden Datenpunkt aktivieren um Buttons in Vis anzuzeigen
+        setState(praefix + "PresenceFuncAvailable", true, true);  //Anwesenheitsfunktion vorhanden Datenpunkt aktivieren um Buttons in Vis anzuzeigen
         TempPresence = getState(PresenceDp).val;
         switch (typeof (TempPresence)) {
             case "number":
@@ -332,7 +345,7 @@ function ConvertPresence(TempPresence = true) {//Wert vom Anwesenheitsdatenpunkt
                 break;
         };
     } else {
-        setState(praefix + "PresenceFuncAvailable", false);//Anwesenheitsfunktion vorhanden Datenpunkt deaktivieren um Buttons in Vis anzuzeigen
+        setState(praefix + "PresenceFuncAvailable", false, true);//Anwesenheitsfunktion vorhanden Datenpunkt deaktivieren um Buttons in Vis anzuzeigen
     };
 }
 
@@ -352,20 +365,20 @@ function CreateTimerCountList() { //Erzeugt Werte für Timer Valuelists (Vis)
     ValueTextDummy = ValueTextDummy.substr(0, ValueTextDummy.length - 1);
 
     //Timer ValueList
-    setState(praefix + "TimerCountValues", ValueDummy);
-    setState(praefix + "TimerCountText", ValueTextDummy);
+    setState(praefix + "TimerCountValues", ValueDummy, true);
+    setState(praefix + "TimerCountText", ValueTextDummy, true);
 }
 
 function SetValueListPairs() { //Erzeugt Werte und Texte für Timer Value Listenfeld (Vis)
     if (logging) log("Reaching SetValueListPairs()");
 
     //Mode ValueList
-    setState(praefix + "ModeValues", ModeValues.join(";"));
-    setState(praefix + "ModeText", ModeText.join(";"));
+    setState(praefix + "ModeValues", ModeValues.join(";"), true);
+    setState(praefix + "ModeText", ModeText.join(";"), true);
 
     //Aktion ValueList
-    setState(praefix + "AktionValues", AktionValues.join(";"));
-    setState(praefix + "AktionText", AktionText.join(";"));
+    setState(praefix + "AktionValues", AktionValues.join(";"), true);
+    setState(praefix + "AktionText", AktionText.join(";"), true);
 }
 
 function CreateTimerTargetsNameList() { //Ermittelt Channelnamen, oder Smartnamen wenn vorhanden
@@ -401,8 +414,8 @@ function CreateTimerTargetsNameList() { //Ermittelt Channelnamen, oder Smartname
 
     TargetNames = NewTargetNames;
 
-    setState(praefix + "TimerTargetValues", Targets.join(";")); //Datenpunkt für Vis Listenfeld füllen
-    setState(praefix + "TimerTargetText", NewTargetNames.join(";")); //Datenpunkt für Vis Listenfeld füllen
+    setState(praefix + "TimerTargetValues", Targets.join(";"), true); //Datenpunkt für Vis Listenfeld füllen
+    setState(praefix + "TimerTargetText", NewTargetNames.join(";"), true); //Datenpunkt für Vis Listenfeld füllen
 
     if (logging) log("Possible Target are:" + Targets);
     if (logging) log("New TargetNames are:" + NewTargetNames);
@@ -442,8 +455,8 @@ function init() {
                 log(Targets.length + " Targets found - Targets are: " + Targets);
                 log("Names are: " + TargetNames);
 
-                setState(praefix + "TimerTargetValues", Targets.join(";")); //Datenpunkt für Vis Listenfeld füllen
-                setState(praefix + "TimerTargetText", TargetNames.join(";")); //Datenpunkt für Vis Listenfeld füllen
+                setState(praefix + "TimerTargetValues", Targets.join(";"), true); //Datenpunkt für Vis Listenfeld füllen
+                setState(praefix + "TimerTargetText", TargetNames.join(";"), true); //Datenpunkt für Vis Listenfeld füllen
             };
         };
     };
@@ -598,7 +611,7 @@ function SetTimer(whichone, GoToTommorrow) { //spezifischen Timer setzen
         if (MyTimer[whichone][5] != "time") { //Wenn Astro gewählt
             NextActiveDay = DetermineNextActiveAstroDay(whichone, GoToTommorrow); //Array mit nächstem Astrotag als Index und Differenz zu heute 0=Index 1=Diff
             let NewAstroTime = DetermineChoosenAstroTime(MyTimer[whichone][5].trim(), NextActiveDay[1], MyTimer[whichone][4]); //Neue Astrozeit generieren nach Ausführung
-            setState(praefix + whichone + "." + Dps[3], NewAstroTime);
+            setState(praefix + whichone + "." + Dps[3], NewAstroTime, true);
             MyTimer[whichone][3] = NewAstroTime;
         } else {
             NextActiveDay = [CreateTimeDaysString(whichone)];
@@ -661,34 +674,129 @@ function DetermineChoosenAstroTime(AstroChoice, AddDays, Shift) { //Zeit für ge
     };
 }
 
+function CheckRule(whichone) {
+    if (logging) log("Reaching CheckRule, Val1=" + MyTimer[whichone][19] + " Operator=" + MyTimer[whichone][20] + " Val2=" + MyTimer[whichone][21]);
+    let tempVal1;
+    let tempVal2;
+    if (MyTimer[whichone][19] == "" || MyTimer[whichone][20] == "" || MyTimer[whichone][21] == "") { //Wenn auch nur eins der Vergleichsfelder leer, Abbruch
+        return true;
+    };
+
+    if (existsState(MyTimer[whichone][19])) {
+        tempVal1 = getState(MyTimer[whichone][19]).val; //Wenn der Wert im Feld 1 eine ID ist, Wert lesen, ansonsten Abbruch (erster Wert MUSS ID sein)
+    } else {
+        return true;
+    };
+
+    if (existsState(MyTimer[whichone][21])) {
+        tempVal2 = getState(MyTimer[whichone][21]).val;//Wenn der Wert im Feld 2 eine ID ist, Wert lesen, ansonsten Inhalt=Wert
+    } else {
+        tempVal2 = MyTimer[whichone][21];
+
+        if (parseFloat(tempVal2) != NaN) { //Datentypen konvertieren wenn möglich
+            tempVal2 = parseFloat(tempVal2);
+        } else if (tempVal2 == "true") {
+            tempVal2 = true;
+        } else if (tempVal2 == "false") {
+            tempVal2 = false;
+        };
+    };
+
+    switch (MyTimer[whichone][20]) {
+        case "<":
+            if (tempVal1 < tempVal2) {
+                return true;
+            } else {
+                return false;
+            };
+            break;
+        case "<=":
+            if (tempVal1 <= tempVal2) {
+                return true;
+            } else {
+                return false;
+            };
+            break;
+        case ">":
+            if (tempVal1 > tempVal2) {
+                return true;
+            } else {
+                return false;
+            };
+            break;
+        case ">=":
+            if (tempVal1 >= tempVal2) {
+                return true;
+            } else {
+                return false;
+            };
+            break;
+        case "=":
+            if (tempVal1 == tempVal2) {
+                return true;
+            } else {
+                return false;
+            };
+            break;
+        case "!=":
+            if (tempVal1 != tempVal2) {
+                return true;
+            } else {
+                return false;
+            };
+            break;
+        default:
+            return true;
+    };
+
+
+}
+
 function DoAction(whichone) { //Hier wird geschaltet, Zentralfunktion
     if (logging) log("Reaching DoAction(), aktiv=" + MyTimer[whichone][0] + " Rolle=" + MyTimer[whichone][1] + " whichone=" + whichone + " Presence=" + Presence + " MyTimer[whichone][13]=" + MyTimer[whichone][13] + " MyTimer[whichone][14]=" + MyTimer[whichone][14]);
-    if (MyTimer[whichone][0] == true) { //Wenn Timer aktiv
+    if (MyTimer[whichone][0] == true && CheckRule(whichone)) { //Wenn Timer aktiv und Rule erfüllt (oder keine Rule eingetragen)
         if ((MyTimer[whichone][14] == true && Presence == true) || (MyTimer[whichone][15] == true && Presence == false) || (MyTimer[whichone][15] == true && MyTimer[whichone][14] == true)) { //Wenn "bei Anwesenheit" aktiv
             TargetSwitchingInProgress = true;
             let OldState = getState(MyTimer[whichone][13]).val;
-
+            let StateType = typeof OldState;
+            if (logging) log("StateType from " + MyTimer[whichone][13] + " = " + StateType + " value=" + OldState)
             switch (MyTimer[whichone][1]) {
                 case 0://Wenns die Rolle Ausschalter ist
-                    setState(MyTimer[whichone][13], false);//Switchtarget deaktivieren
+                    if (StateType == "string") {
+                        setState(MyTimer[whichone][13], "false");//Switchtarget deaktivieren
+                    } else {
+                        setState(MyTimer[whichone][13], false);//Switchtarget deaktivieren
+                    };
                     MyTimer[whichone][(Dps.length + 0)] = "off";
                     log("Timer " + (whichone + 1) + ", " + GetDeviceName(GetParentId(MyTimer[whichone][13])) + ", switched off");
                     if (MyTimer[whichone][16]) Meldung("Timer " + (whichone + 1) + ", " + GetDeviceName(GetParentId(MyTimer[whichone][13])) + ", hat ausgeschaltet");
                     break;
                 case 1:// Wenn die Rolle Anschalter ist
-                    setState(MyTimer[whichone][13], true); //Switchtarget aktivieren
+                    if (StateType == "string") {
+                        setState(MyTimer[whichone][13], "true");//Switchtarget deaktivieren
+                    } else {
+                        setState(MyTimer[whichone][13], true);//Switchtarget deaktivieren
+                    };
                     MyTimer[whichone][(Dps.length + 0)] = "on";
                     log("Timer " + (whichone + 1) + ", " + GetDeviceName(GetParentId(MyTimer[whichone][13])) + ", switched on");
                     if (MyTimer[whichone][16]) Meldung("Timer " + (whichone + 1) + ", " + GetDeviceName(GetParentId(MyTimer[whichone][13])) + ", hat eingeschaltet");
                     break;
                 case 2:// Wenn die Rolle Umschalter ist
                     if (OldState) { //Aktuellen Targetstatus lesen
-                        setState(MyTimer[whichone][13], false); //Switchtarget deaktivieren wenn aktueller Status true
+                        if (StateType == "string") {
+                            setState(MyTimer[whichone][13], "false");//Switchtarget deaktivieren
+                        } else {
+                            setState(MyTimer[whichone][13], false);//Switchtarget deaktivieren
+                        };
                         MyTimer[whichone][(Dps.length + 0)] = "off";
                         log("Timer " + (whichone + 1) + ", " + GetDeviceName(GetParentId(MyTimer[whichone][13])) + ", changed over to off");
                         if (MyTimer[whichone][16]) Meldung("Timer " + (whichone + 1) + ", " + GetDeviceName(GetParentId(MyTimer[whichone][13])) + ", hat (um)-ausgeschaltet");
                     } else {
-                        setState(MyTimer[whichone][13], true); //Switchtarget aktivieren wenn aktueller Status false
+                        if (StateType == "string") {
+                            setState(MyTimer[whichone][13], "true");//Switchtarget deaktivieren
+                        } else {
+                            setState(MyTimer[whichone][13], true);//Switchtarget deaktivieren
+                        };
                         MyTimer[whichone][(Dps.length + 0)] = "on";
                         log("Timer " + (whichone + 1) + ", " + GetDeviceName(GetParentId(MyTimer[whichone][13])) + ", changed over to on");
                         if (MyTimer[whichone][16]) Meldung("Timer " + (whichone + 1) + ", " + GetDeviceName(GetParentId(MyTimer[whichone][13])) + ", hat (um)-angeschaltet");
@@ -697,10 +805,10 @@ function DoAction(whichone) { //Hier wird geschaltet, Zentralfunktion
                 case 3:// Wenn Rolle ist "Wert senden"  
                     log("MyTimer[whichone][18]=" + MyTimer[whichone][18])
                     if (MyTimer[whichone][18] != "" && MyTimer[whichone][18] != "-" && typeof MyTimer[whichone][18] != "undefined") {
-                        setState(MyTimer[whichone][13], ConvertSendValue(MyTimer[whichone][18])); //Switchtarget Wert senden
+                        setState(MyTimer[whichone][13], ConvertSendValue(MyTimer[whichone][18], StateType)); //Switchtarget Wert senden
                         MyTimer[whichone][(Dps.length + 0)] = "on";
-                        log("Timer " + (whichone + 1) + ", " + GetDeviceName(GetParentId(MyTimer[whichone][13])) + ", send value " + MyTimer[whichone][18] + " as " + typeof ConvertSendValue(MyTimer[whichone][18]));
-                        if (MyTimer[whichone][16]) Meldung("Timer " + (whichone + 1) + ", " + GetDeviceName(GetParentId(MyTimer[whichone][13])) + ", send value " + MyTimer[whichone][18] + " as " + typeof ConvertSendValue(MyTimer[whichone][18]));
+                        log("Timer " + (whichone + 1) + ", " + GetDeviceName(GetParentId(MyTimer[whichone][13])) + ", send value " + MyTimer[whichone][18] + " as " + typeof ConvertSendValue(MyTimer[whichone][18], StateType));
+                        if (MyTimer[whichone][16]) Meldung("Timer " + (whichone + 1) + ", " + GetDeviceName(GetParentId(MyTimer[whichone][13])) + ", send value " + MyTimer[whichone][18] + " as " + typeof ConvertSendValue(MyTimer[whichone][18], StateType));
 
                     };
                     break;
@@ -711,10 +819,21 @@ function DoAction(whichone) { //Hier wird geschaltet, Zentralfunktion
     };
 }
 
-function ConvertSendValue(SendValue) {
-    if (SendValue == "true") return true;
-    if (SendValue == "false") return false;
-    if (parseInt(SendValue) != NaN) return parseInt(SendValue);
+function ConvertSendValue(SendValue, StateType) { //Formatiert Wert passend zum Datentyp des Datenpunktes welcher als Target eingestellt ist.
+    log("Reaching ConvertSendValue")
+    switch (StateType) {
+        case "string":
+            SendValue = String(SendValue)
+            break;
+        case "number":
+            if (parseInt(SendValue) != NaN) SendValue = parseInt(SendValue);
+            break;
+        case "boolean":
+            if (SendValue == "true") SendValue = true;
+            if (SendValue == "false") SendValue = false;
+            break;
+        default:
+    };
     return SendValue;
 }
 
@@ -779,6 +898,9 @@ function MakeTable() {
     };
     if (TblShowTimerMessageCol) {
         MyTableHead = MyTableHead + "<th " + ImgColheadstyle + HeadBgColor + "'><img style='margin: auto; display: block; filter: invert(" + ImgInvert + "); height: 40px;' src='" + TblMessageImg + "'></th>";
+    };
+    if (TblShowTimerRuleCol) {
+        MyTableHead = MyTableHead + "<th width='110px' " + headstyle0 + HeadBgColor + "'>Regel</th>";
     };
 
     MyTableHead = MyTableHead + "</tr>";
@@ -904,12 +1026,19 @@ function MakeTable() {
                 MyTable += "<td " + ImgColstyle + BgColor + "'>" + " " + "</td>";
             };
         };
+        if (TblShowTimerRuleCol) {
+            if (MyTimer[x][19] != "" && MyTimer[x][20] != "" && MyTimer[x][21] != "") {
+                MyTable += "<td " + style1 + BgColor + "'>" + MyTimer[x][19] + " " + MyTimer[x][20] + " " + MyTimer[x][21] + "</td>";
+            } else {
+                MyTable += "<td " + style1 + BgColor + "'>" + "</td>";
+            };
+        };
 
         MyTable += "</tr>";
     };
 
     MyTable += "</table>";
-    setState(praefix + "TimerOverviewTable", MyTable);
+    setState(praefix + "TimerOverviewTable", MyTable, true);
     //if (logging) log(MyTable);
 }
 
@@ -925,7 +1054,7 @@ function WriteToTimer(whichone) { //Schreibt Daten vom Template in bestimmten Ti
     for (let y = 0; y < Dps.length; y++) {
         TempVal = getState(praefix + "Template" + "." + Dps[y]).val
         if (y == 4) TempVal = parseInt(TempVal); //Workaround für jqui Input welches immer Strings liefert
-        setState(praefix + whichone + "." + Dps[y], TempVal);
+        setState(praefix + whichone + "." + Dps[y], TempVal, true);
         MyTimer[whichone][y] = TempVal;
     };
 
@@ -978,7 +1107,7 @@ function DeleteTimer(whichone = ChoosenTimer) {
     KillTimer(whichone); //Vorhandenen Timer/Schedule löschen
 
     NewArray = TempArray.concat(MyTimer.slice(0, whichone), MyTimer.slice(whichone + 1));
-    
+
     TimerCount--; //Nach löschen im Array, Timerzähler -1
     setState(praefix + "TimerCount", TimerCount); //TimerCount in Objektliste aktualisieren
 
@@ -1001,7 +1130,7 @@ function DeleteTimer(whichone = ChoosenTimer) {
     for (let x = 0; x < TimerCount; x++) {
         for (let y = 0; y < Dps.length; y++) {
             //log("setState(" + praefix + x + "." + Dps[y] + " , " + MyTimer[x][y]);
-            setState(praefix + x + "." + Dps[y], MyTimer[x][y]);
+            setState(praefix + x + "." + Dps[y], MyTimer[x][y], true);
         };
     };
     setState(praefix + "SwitchToTimer", TimerCount - 1); //Dann zu vorherigem Timer wechseln
