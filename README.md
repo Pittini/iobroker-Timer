@@ -79,6 +79,8 @@ Das wars, viel Spaß.
 
 
 ## Changelog
+### V2.2.0 (18.07.2021)
+* Add: Möglichkeit bedingter Ausführung hinzugefügt. Z.B. Bewässerung um 6.00 starten, aber nur wenn Bodenfeuchte kleiner x.
 ### V2.1.10 (03.05.2021)
 * Fix: Fehlermeldung "...has been written without ack-flag" bei Verwendung des Js Controllers 3.3.x oder höher. Issue: https://github.com/Pittini/iobroker-Timer/issues/8
 ### V2.1.9 (08.12.2020)
